@@ -217,7 +217,7 @@ const REGLAS = [
       const t = (parseInt(p[0])||0)*60+(parseInt(p[1])||0);
       const noche = t < 360 || t >= 1110;
       if (noche && r.irr > 5)           return {titulo:'Irradiancia anómala — horario nocturno',    desc:`${r.irr.toFixed(1)} W/m² detectado de noche (6:30 pm–6:00 am). Se esperaba 0 W/m².`, tipo:'error'};
-      if (!noche && t>=600 && t<=840 && r.irr<1) return {titulo:'Piranómetro sin señal — horario diurno', desc:`0 W/m² entre 10:00 am y 2:00 pm. Posible error Modbus o sensor desconectado.`,  tipo:'warn'};
+    if (!noche && r.irr < 1) return {titulo:'Piranómetro sin señal — horario diurno', desc:`0 W/m² detectado entre 6:00 am y 6:30 pm. Posible error Modbus o sensor desconectado.`, tipo:'warn'};
       return null;
     }
   },
