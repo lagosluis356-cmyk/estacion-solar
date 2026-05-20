@@ -23,162 +23,64 @@
     --green:   #22c55e;
   }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-  }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
 
-  /* ── HEADER ── */
   header {
-    padding: 1rem 2rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(17,24,39,0.9);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    padding: 1rem 2rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(17,24,39,0.9); backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 10;
   }
-  .logo {
-    display: flex; align-items: center; gap: 10px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.88rem; font-weight: 700;
-    letter-spacing: 0.06em; color: var(--amber);
-  }
-  .logo-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 17px;
-  }
-  .pill {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 0.73rem; color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 5px 14px;
-  }
-  .pulse {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--green);
-    animation: blink 2s infinite;
-  }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: 'Space Mono', monospace; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.06em; color: var(--amber); }
+  .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .pill { display: flex; align-items: center; gap: 6px; font-size: 0.73rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-  /* ── LAYOUT ── */
-  main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 5rem;
-  }
-  .section-label {
-    font-size: 0.68rem; font-weight: 600;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 0.9rem;
-  }
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+  .section-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.9rem; }
 
-  /* ── METRIC CARDS ── */
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px; margin-bottom: 2rem;
-  }
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.25rem 1.25rem 1rem;
-    position: relative; overflow: hidden;
-    transition: border-color .2s;
-  }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 2rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.25rem 1rem; position: relative; overflow: hidden; transition: border-color .2s; }
   .card:hover { border-color: rgba(255,255,255,.13); }
   .card-top { position:absolute; top:0; left:0; right:0; height:2px; }
-  .card h3 {
-    font-size: 0.7rem; font-weight: 500;
-    text-transform: uppercase; letter-spacing: .08em;
-    color: var(--muted); margin-bottom: .75rem;
-  }
-  .card .val {
-    font-family: 'Space Mono', monospace;
-    font-size: 2.1rem; font-weight: 700; line-height: 1;
-  }
+  .card h3 { font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .75rem; }
+  .card .val { font-family: 'Space Mono', monospace; font-size: 2.1rem; font-weight: 700; line-height: 1; }
   .card .unit { font-size:.8rem; color:var(--muted); margin-left:4px; font-family:'DM Sans',sans-serif; }
   .card .sub  { margin-top:.6rem; font-size:.71rem; color:var(--muted); }
 
-  /* ── CHART CARDS ── */
-  .charts-row {
-    display: grid; gap: 14px;
-    margin-bottom: 14px;
-  }
-  .charts-row.two { grid-template-columns: 2fr 1fr; }
-  .charts-row.half{ grid-template-columns: 1fr 1fr; }
-
-  .chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.25rem;
-  }
-  .chart-card h3 {
-    font-size: .7rem; font-weight:500;
-    text-transform:uppercase; letter-spacing:.08em;
-    color: var(--muted); margin-bottom:1rem;
-  }
-  .chart-wrap { position:relative; height:220px; width:100%; }
+  .charts-row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .charts-row.two  { grid-template-columns: 2fr 1fr; }
+  .charts-row.half { grid-template-columns: 1fr 1fr; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
+  .chart-card h3 { font-size: .7rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color: var(--muted); margin-bottom:1rem; }
+  .chart-wrap    { position:relative; height:220px; width:100%; }
   .chart-wrap-sm { position:relative; height:180px; width:100%; }
 
-  /* ── GAUGE ── */
-  .gauge-wrap {
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    height:220px; gap:8px;
-  }
-  .gauge-val {
-    font-family:'Space Mono',monospace;
-    font-size:1.7rem; font-weight:700;
-    color: var(--teal); text-align:center;
-  }
-  .gauge-lbl {
-    font-size:.7rem; color:var(--muted);
-    text-transform:uppercase; letter-spacing:.07em; text-align:center;
-  }
+  .gauge-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:220px; gap:8px; }
+  .gauge-val  { font-family:'Space Mono',monospace; font-size:1.7rem; font-weight:700; color: var(--teal); text-align:center; }
+  .gauge-lbl  { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; text-align:center; }
 
-  /* ── TABLE ── */
-  .table-card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:14px; padding:1.25rem; margin-top:14px;
-    overflow-x:auto;
-  }
-  .table-card h3 {
-    font-size:.7rem; font-weight:500;
-    text-transform:uppercase; letter-spacing:.08em;
-    color:var(--muted); margin-bottom:1rem;
-  }
+  .table-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-top:14px; overflow-x:auto; }
   table { width:100%; border-collapse:collapse; font-size:.8rem; }
-  th {
-    text-align:left; padding:6px 10px;
-    color:var(--muted); font-weight:500;
-    font-size:.68rem; letter-spacing:.05em;
-    border-bottom:1px solid var(--border);
-  }
-  td {
-    padding:8px 10px; border-bottom:1px solid var(--border);
-    font-family:'Space Mono',monospace; font-size:.76rem;
-  }
+  th { text-align:left; padding:6px 10px; color:var(--muted); font-weight:500; font-size:.68rem; letter-spacing:.05em; border-bottom:1px solid var(--border); }
+  td { padding:8px 10px; border-bottom:1px solid var(--border); font-family:'Space Mono',monospace; font-size:.76rem; }
   tr:last-child td { border-bottom:none; }
 
-  /* ── ERROR BANNER ── */
-  .error-banner {
-    background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2);
-    border-radius:10px; padding:.8rem 1rem; margin-bottom:1rem;
-    font-size:.8rem; color:#fca5a5; display:none;
-  }
+  .error-banner { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); border-radius:10px; padding:.8rem 1rem; margin-bottom:1rem; font-size:.8rem; color:#fca5a5; display:none; }
+
+  #alertas-wrap { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; }
+  .alerta { display: flex; align-items: flex-start; gap: 10px; padding: .75rem 1rem; border-radius: 10px; font-size: .8rem; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+  .alerta.warn  { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); color: #fcd34d; }
+  .alerta.error { background: rgba(239,68,68,.08);  border: 1px solid rgba(239,68,68,.25);  color: #fca5a5; }
+  .alerta-icono  { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .alerta-body   { flex: 1; }
+  .alerta-titulo { font-weight: 600; margin-bottom: 2px; }
+  .alerta-desc   { opacity: .8; font-size: .75rem; }
+  .alerta-hora   { font-size: .68rem; opacity: .55; margin-top: 3px; font-family: 'Space Mono', monospace; }
+  .card.alerta-activa { border-color: rgba(239,68,68,.45) !important; box-shadow: 0 0 0 1px rgba(239,68,68,.15); }
+  .card.warn-activa   { border-color: rgba(245,158,11,.45) !important; box-shadow: 0 0 0 1px rgba(245,158,11,.15); }
 
   @media (max-width: 700px) {
     .charts-row.two, .charts-row.half { grid-template-columns:1fr; }
@@ -190,42 +92,35 @@
 <body>
 
 <header>
-  <div class="logo">
-    <div class="logo-icon">☀</div>
-    ESTACIÓN SOLAR
-  </div>
-  <div class="pill">
-    <div class="pulse"></div>
-    <span id="syncTime">Sincronizando…</span>
-  </div>
+  <div class="logo"><div class="logo-icon">☀</div>ESTACIÓN SOLAR</div>
+  <div class="pill"><div class="pulse"></div><span id="syncTime">Sincronizando…</span></div>
 </header>
 
 <main>
-
   <div class="error-banner" id="errBanner"></div>
+  <div id="alertas-wrap"></div>
 
-  <!-- MÉTRICAS -->
   <p class="section-label">Lecturas actuales</p>
   <div class="cards">
-    <div class="card">
+    <div class="card" id="card-irr">
       <div class="card-top" style="background:linear-gradient(90deg,#f59e0b,#d97706)"></div>
       <h3>Irradiancia</h3>
       <div><span class="val" id="v-irr" style="color:#f59e0b">--</span><span class="unit">W/m²</span></div>
-      <div class="sub" id="s-irr">Piranómetro MS-60M</div>
+      <div class="sub">Piranómetro MS-60M</div>
     </div>
-    <div class="card">
+    <div class="card" id="card-tds">
       <div class="card-top" style="background:linear-gradient(90deg,#ec4899,#db2777)"></div>
       <h3>Temp. panel</h3>
       <div><span class="val" id="v-tds" style="color:#ec4899">--</span><span class="unit">°C</span></div>
       <div class="sub">DS18B20</div>
     </div>
-    <div class="card">
+    <div class="card" id="card-tdht">
       <div class="card-top" style="background:linear-gradient(90deg,#3b82f6,#2563eb)"></div>
       <h3>Temp. ambiente</h3>
       <div><span class="val" id="v-tdht" style="color:#3b82f6">--</span><span class="unit">°C</span></div>
       <div class="sub">DHT22</div>
     </div>
-    <div class="card">
+    <div class="card" id="card-hum">
       <div class="card-top" style="background:linear-gradient(90deg,#14b8a6,#0d9488)"></div>
       <h3>Humedad</h3>
       <div><span class="val" id="v-hum" style="color:#14b8a6">--</span><span class="unit">%</span></div>
@@ -233,22 +128,18 @@
     </div>
   </div>
 
-  <!-- GRÁFICAS FILA 1 -->
   <p class="section-label">Histórico</p>
   <div class="charts-row two">
     <div class="chart-card">
       <h3>Irradiancia solar — últimas mediciones</h3>
-      <div class="chart-wrap">
-        <canvas id="cIrr" role="img" aria-label="Gráfico de irradiancia solar en el tiempo">Irradiancia solar en W/m².</canvas>
-      </div>
+      <div class="chart-wrap"><canvas id="cIrr"></canvas></div>
     </div>
     <div class="chart-card">
       <h3>Humedad relativa</h3>
       <div class="gauge-wrap">
-        <svg viewBox="0 0 160 90" width="160" height="90" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 160 90" width="160" height="90">
           <path d="M15 85 A65 65 0 0 1 145 85" fill="none" stroke="#1a2333" stroke-width="14" stroke-linecap="round"/>
-          <path id="gArc" d="M15 85 A65 65 0 0 1 145 85" fill="none" stroke="#14b8a6" stroke-width="14"
-            stroke-linecap="round" stroke-dasharray="0 204" style="transition:stroke-dasharray 1s ease"/>
+          <path id="gArc" d="M15 85 A65 65 0 0 1 145 85" fill="none" stroke="#14b8a6" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 204" style="transition:stroke-dasharray 1s ease"/>
           <circle id="gDot" cx="15" cy="85" r="7" fill="#14b8a6" style="transition:all 1s ease"/>
         </svg>
         <div class="gauge-val" id="gVal">--%</div>
@@ -257,168 +148,133 @@
     </div>
   </div>
 
-  <!-- GRÁFICAS FILA 2 -->
   <div class="charts-row half">
     <div class="chart-card">
       <h3>Temperatura — panel vs ambiente</h3>
-      <div class="chart-wrap-sm">
-        <canvas id="cTemp" role="img" aria-label="Comparativo temperatura panel y ambiente">Temperaturas en °C.</canvas>
-      </div>
+      <div class="chart-wrap-sm"><canvas id="cTemp"></canvas></div>
     </div>
     <div class="chart-card">
       <h3>Humedad histórica</h3>
-      <div class="chart-wrap-sm">
-        <canvas id="cHum" role="img" aria-label="Humedad relativa histórica">Humedad en %.</canvas>
-      </div>
+      <div class="chart-wrap-sm"><canvas id="cHum"></canvas></div>
     </div>
   </div>
 
-  <!-- TABLA -->
   <p class="section-label" style="margin-top:2rem">Últimas 10 lecturas</p>
   <div class="table-card">
     <table>
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Irradiancia (W/m²)</th>
-          <th>T. Panel (°C)</th>
-          <th>T. Ambiente (°C)</th>
-          <th>Humedad (%)</th>
-        </tr>
-      </thead>
-      <tbody id="tBody">
-        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem;font-family:'DM Sans'">Cargando datos…</td></tr>
-      </tbody>
+      <thead><tr><th>Timestamp</th><th>Irradiancia (W/m²)</th><th>T. Panel (°C)</th><th>T. Ambiente (°C)</th><th>Humedad (%)</th></tr></thead>
+      <tbody id="tBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Cargando datos…</td></tr></tbody>
     </table>
   </div>
-
 </main>
 
-<!-- ── SCRIPTS ── -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ════════════════════════════════════════════════
-//  CONFIGURACIÓN — solo edita esta sección
-// ════════════════════════════════════════════════
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
-
-// Índices de columnas en tu Sheet (empieza en 0)
-// Ajusta si el orden de tus columnas es diferente
-const COL = {
-  timestamp : 0,
-  irr       : 2,   // irradiancia
-  tDS       : 3,   // temperatura_panel
-  tDHT      : 4,   // temperatura_ambiente
-  hum       : 5    // humedad
-};
-
-const REFRESH_MS = 60000; // actualizar cada 60 s
-// ════════════════════════════════════════════════
+const CSV_URL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
+const COL        = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5 };
+const REFRESH_MS = 60000;
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
   return lines.slice(1).map(line => {
-    // manejar comas dentro de comillas
-    const cols = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || line.split(',');
-    const clean = cols.map(c => c.replace(/^"|"$/g, '').trim());
-    return {
-      ts  : clean[COL.timestamp] || '--',
-      irr : parseFloat(clean[COL.irr])  || 0,
-      tDS : parseFloat(clean[COL.tDS])  || 0,
-      tDHT: parseFloat(clean[COL.tDHT]) || 0,
-      hum : parseFloat(clean[COL.hum])  || 0
-    };
+    const cols  = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || line.split(',');
+    const clean = cols.map(c => c.replace(/^"|"$/g,'').trim());
+    return { ts:clean[COL.timestamp]||'--', irr:parseFloat(clean[COL.irr])||0, tDS:parseFloat(clean[COL.tDS])||0, tDHT:parseFloat(clean[COL.tDHT])||0, hum:parseFloat(clean[COL.hum])||0 };
   }).filter(r => r.ts !== '--');
 }
 
-// ── Gauge ──────────────────────────────────────
 function setGauge(pct) {
   const p = Math.max(0, Math.min(100, pct));
-  const filled = 204 * p / 100;
-  document.getElementById('gArc').setAttribute('stroke-dasharray', `${filled} ${204 - filled}`);
-  const angle = (-180 + 180 * p / 100) * Math.PI / 180;
-  document.getElementById('gDot').setAttribute('cx', (80 + 65 * Math.cos(angle)).toFixed(1));
-  document.getElementById('gDot').setAttribute('cy', (85 + 65 * Math.sin(angle)).toFixed(1));
-  document.getElementById('gVal').textContent = p.toFixed(1) + '%';
+  document.getElementById('gArc').setAttribute('stroke-dasharray', `${204*p/100} ${204-204*p/100}`);
+  const a = (-180 + 180*p/100) * Math.PI/180;
+  document.getElementById('gDot').setAttribute('cx', (80+65*Math.cos(a)).toFixed(1));
+  document.getElementById('gDot').setAttribute('cy', (85+65*Math.sin(a)).toFixed(1));
+  document.getElementById('gVal').textContent = p.toFixed(1)+'%';
 }
 
-// ── Chart defaults ─────────────────────────────
 const DEF = {
-  responsive: true, maintainAspectRatio: false,
-  animation: { duration: 500 },
-  plugins: { legend: { display: false } },
-  scales: {
-    x: { ticks: { color:'#64748b', font:{size:10,family:'Space Mono'}, maxTicksLimit:8 },
-         grid: { color:'rgba(255,255,255,0.04)' } },
-    y: { ticks: { color:'#64748b', font:{size:10,family:'Space Mono'} },
-         grid: { color:'rgba(255,255,255,0.04)' } }
+  responsive:true, maintainAspectRatio:false, animation:{duration:500},
+  plugins:{legend:{display:false}},
+  scales:{
+    x:{ticks:{color:'#64748b',font:{size:10,family:'Space Mono'},maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.04)'}},
+    y:{ticks:{color:'#64748b',font:{size:10,family:'Space Mono'}},grid:{color:'rgba(255,255,255,0.04)'}}
   }
 };
-
 let cIrr, cTemp, cHum;
 
 function initCharts() {
-  cIrr = new Chart(document.getElementById('cIrr'), {
-    type: 'line',
-    data: { labels:[], datasets:[{
-      data:[], borderColor:'#f59e0b',
-      backgroundColor:'rgba(245,158,11,0.08)',
-      fill:true, tension:0.4, pointRadius:2, borderWidth:2
-    }]},
-    options: { ...DEF }
-  });
-
-  cTemp = new Chart(document.getElementById('cTemp'), {
-    type: 'line',
-    data: { labels:[], datasets:[
-      { label:'Panel',    data:[], borderColor:'#ec4899', backgroundColor:'transparent', tension:0.4, pointRadius:2, borderWidth:2 },
-      { label:'Ambiente', data:[], borderColor:'#3b82f6', backgroundColor:'transparent', tension:0.4, pointRadius:2, borderWidth:2, borderDash:[4,3] }
-    ]},
-    options: { ...DEF, plugins:{ legend:{
-      display:true,
-      labels:{ color:'#64748b', font:{size:10,family:'DM Sans'}, usePointStyle:true, boxWidth:8 }
-    }}}
-  });
-
-  cHum = new Chart(document.getElementById('cHum'), {
-    type: 'bar',
-    data: { labels:[], datasets:[{
-      data:[], backgroundColor:'rgba(20,184,166,0.45)',
-      borderColor:'#14b8a6', borderWidth:1, borderRadius:4
-    }]},
-    options: { ...DEF, scales:{ ...DEF.scales, y:{ ...DEF.scales.y, min:0, max:100 } } }
-  });
+  cIrr  = new Chart(document.getElementById('cIrr'),  {type:'line', data:{labels:[],datasets:[{data:[],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.08)',fill:true,tension:0.4,pointRadius:2,borderWidth:2}]}, options:{...DEF}});
+  cTemp = new Chart(document.getElementById('cTemp'), {type:'line', data:{labels:[],datasets:[{label:'Panel',data:[],borderColor:'#ec4899',backgroundColor:'transparent',tension:0.4,pointRadius:2,borderWidth:2},{label:'Ambiente',data:[],borderColor:'#3b82f6',backgroundColor:'transparent',tension:0.4,pointRadius:2,borderWidth:2,borderDash:[4,3]}]}, options:{...DEF,plugins:{legend:{display:true,labels:{color:'#64748b',font:{size:10,family:'DM Sans'},usePointStyle:true,boxWidth:8}}}}});
+  cHum  = new Chart(document.getElementById('cHum'),  {type:'bar',  data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(20,184,166,0.45)',borderColor:'#14b8a6',borderWidth:1,borderRadius:4}]}, options:{...DEF,scales:{...DEF.scales,y:{...DEF.scales.y,min:0,max:100}}}});
 }
 
-// ── Render ─────────────────────────────────────
+const REGLAS = [
+  {
+    id:'irr-nocturna', card:'card-irr',
+    check(r) {
+      const p = (r.ts.split(' ')[1]||'').split(':');
+      const t = (parseInt(p[0])||0)*60+(parseInt(p[1])||0);
+      const noche = t < 360 || t >= 1110;
+      if (noche && r.irr > 5)           return {titulo:'Irradiancia anómala — horario nocturno',    desc:`${r.irr.toFixed(1)} W/m² detectado de noche (6:30 pm–6:00 am). Se esperaba 0 W/m².`, tipo:'error'};
+      if (!noche && t>=600 && t<=840 && r.irr<1) return {titulo:'Piranómetro sin señal — horario diurno', desc:`0 W/m² entre 10:00 am y 2:00 pm. Posible error Modbus o sensor desconectado.`,  tipo:'warn'};
+      return null;
+    }
+  },
+  {
+    id:'temp-panel', card:'card-tds',
+    check(r) {
+      if (r.tDS < -10) return {titulo:'Temperatura panel fuera de rango', desc:`DS18B20: ${r.tDS.toFixed(1)} °C. Valor imposible en Colombia. Revisa el sensor.`, tipo:'error'};
+      if (r.tDS >  90) return {titulo:'Temperatura panel crítica',         desc:`DS18B20: ${r.tDS.toFixed(1)} °C. Supera el límite seguro del módulo (~85 °C).`,    tipo:'error'};
+      return null;
+    }
+  },
+  {
+    id:'temp-amb', card:'card-tdht',
+    check(r) {
+      if (r.tDHT < -10) return {titulo:'Temperatura ambiente fuera de rango', desc:`DHT22: ${r.tDHT.toFixed(1)} °C. Imposible para Cartagena. Revisa el sensor.`, tipo:'error'};
+      if (r.tDHT >  60) return {titulo:'Temperatura ambiente anómala',         desc:`DHT22: ${r.tDHT.toFixed(1)} °C. Valor inusualmente alto.`,                    tipo:'warn'};
+      return null;
+    }
+  },
+  {
+    id:'humedad', card:'card-hum',
+    check(r) {
+      if (r.hum < 1 || r.hum > 100) return {titulo:'Humedad fuera de rango físico', desc:`DHT22: ${r.hum.toFixed(1)} %. El rango válido es 0–100 %.`, tipo:'error'};
+      return null;
+    }
+  }
+];
+
+function evalAlertas(latest) {
+  const wrap  = document.getElementById('alertas-wrap');
+  const ahora = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  ['card-irr','card-tds','card-tdht','card-hum'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('alerta-activa','warn-activa'); });
+  wrap.innerHTML = REGLAS.map(regla => {
+    const res = regla.check(latest);
+    if (!res) return '';
+    const card = document.getElementById(regla.card);
+    if (card) card.classList.add(res.tipo==='error' ? 'alerta-activa' : 'warn-activa');
+    return `<div class="alerta ${res.tipo}"><span class="alerta-icono">${res.tipo==='error'?'⛔':'⚠️'}</span><div class="alerta-body"><div class="alerta-titulo">${res.titulo}</div><div class="alerta-desc">${res.desc}</div><div class="alerta-hora">Detectado a las ${ahora}</div></div></div>`;
+  }).join('');
+}
+
 function render(rows) {
   if (!rows.length) return;
-  const latest = rows[rows.length - 1];
-
+  const latest = rows[rows.length-1];
   document.getElementById('v-irr').textContent  = Number(latest.irr).toFixed(1);
   document.getElementById('v-tds').textContent  = Number(latest.tDS).toFixed(1);
   document.getElementById('v-tdht').textContent = Number(latest.tDHT).toFixed(1);
   document.getElementById('v-hum').textContent  = Number(latest.hum).toFixed(1);
   setGauge(latest.hum);
+  evalAlertas(latest);
 
-  const labels = rows.map(r => r.ts);
-  cIrr.data.labels = labels;
-  cIrr.data.datasets[0].data = rows.map(r => r.irr);
-  cIrr.update();
+  const labels = rows.map(r=>r.ts);
+  cIrr.data.labels  = labels; cIrr.data.datasets[0].data  = rows.map(r=>r.irr);  cIrr.update();
+  cTemp.data.labels = labels; cTemp.data.datasets[0].data = rows.map(r=>r.tDS);  cTemp.data.datasets[1].data = rows.map(r=>r.tDHT); cTemp.update();
+  cHum.data.labels  = labels; cHum.data.datasets[0].data  = rows.map(r=>r.hum);  cHum.update();
 
-  cTemp.data.labels = labels;
-  cTemp.data.datasets[0].data = rows.map(r => r.tDS);
-  cTemp.data.datasets[1].data = rows.map(r => r.tDHT);
-  cTemp.update();
-
-  cHum.data.labels = labels;
-  cHum.data.datasets[0].data = rows.map(r => r.hum);
-  cHum.update();
-
-  // Tabla últimas 10
-  const recent = [...rows].reverse().slice(0, 10);
-  document.getElementById('tBody').innerHTML = recent.map(r => `
+  document.getElementById('tBody').innerHTML = [...rows].reverse().slice(0,10).map(r=>`
     <tr>
       <td style="color:var(--muted);font-size:.72rem">${r.ts}</td>
       <td style="color:#f59e0b">${Number(r.irr).toFixed(2)}</td>
@@ -427,25 +283,21 @@ function render(rows) {
       <td style="color:#14b8a6">${Number(r.hum).toFixed(2)}</td>
     </tr>`).join('');
 
-  document.getElementById('syncTime').textContent =
-    'Sync: ' + new Date().toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('syncTime').textContent = 'Sync: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   document.getElementById('errBanner').style.display = 'none';
 }
 
-// ── Fetch ──────────────────────────────────────
 async function fetchData() {
   try {
-    const res = await fetch(CSV_URL + '&t=' + Date.now()); // evitar caché
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    const rows = parseCSV(text);
+    const res  = await fetch(CSV_URL+'&t='+Date.now());
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const rows = parseCSV(await res.text());
     if (rows.length) render(rows);
     else throw new Error('Sin filas de datos');
   } catch(e) {
-    const b = document.getElementById('errBanner');
-    b.textContent = '⚠ Error obteniendo datos: ' + e.message + '. Reintentando en 60 s…';
-    b.style.display = 'block';
-    document.getElementById('syncTime').textContent = 'Error — ' + new Date().toLocaleTimeString('es-CO');
+    document.getElementById('errBanner').textContent = '⚠ Error: '+e.message+'. Reintentando en 60 s…';
+    document.getElementById('errBanner').style.display = 'block';
+    document.getElementById('syncTime').textContent = 'Error — '+new Date().toLocaleTimeString('es-CO');
   }
 }
 
