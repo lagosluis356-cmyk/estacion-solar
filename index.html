@@ -1,56 +1,58 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estación Solar — Dashboard</title>
+<title>Estación Solar UAC — Dashboard</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg:      #0b1120;
-    --surface: #111827;
-    --border:  rgba(255,255,255,0.06);
-    --text:    #f1f5f9;
-    --muted:   #64748b;
-    --amber:   #f59e0b;
-    --teal:    #14b8a6;
-    --blue:    #3b82f6;
-    --pink:    #ec4899;
-    --green:   #22c55e;
+    --bg:#0b1120; --surface:#111827; --border:rgba(255,255,255,0.06);
+    --text:#f1f5f9; --muted:#64748b; --amber:#f59e0b; --teal:#14b8a6;
+    --blue:#3b82f6; --pink:#ec4899; --green:#22c55e; --orange:#f97316;
+    --red:#ef4444; --yellow:#eab308;
   }
-
   body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
-
-  header {
-    padding:1rem 2rem; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between;
-    background:rgba(17,24,39,0.9); backdrop-filter:blur(12px);
-    position:sticky; top:0; z-index:10;
-  }
+  header { padding:1rem 2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:rgba(17,24,39,0.9); backdrop-filter:blur(12px); position:sticky; top:0; z-index:10; }
   .logo { display:flex; align-items:center; gap:10px; font-family:'Space Mono',monospace; font-size:.88rem; font-weight:700; letter-spacing:.06em; color:var(--amber); }
   .logo-icon { width:32px; height:32px; background:linear-gradient(135deg,#f59e0b,#d97706); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; }
   .pill { display:flex; align-items:center; gap:6px; font-size:.73rem; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:5px 14px; }
   .pulse { width:7px; height:7px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
-
-  main { max-width:1100px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  main { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
   .section-label { font-size:.68rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:.9rem; }
-
-  /* CARDS */
-  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:2rem; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:2rem; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.25rem 1rem; position:relative; overflow:hidden; transition:border-color .2s; }
   .card:hover { border-color:rgba(255,255,255,.13); }
   .card-top { position:absolute; top:0; left:0; right:0; height:2px; }
   .card h3 { font-size:.7rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:.75rem; }
-  .card .val { font-family:'Space Mono',monospace; font-size:2.1rem; font-weight:700; line-height:1; }
+  .card .val { font-family:'Space Mono',monospace; font-size:2rem; font-weight:700; line-height:1; }
   .card .unit { font-size:.8rem; color:var(--muted); margin-left:4px; font-family:'DM Sans',sans-serif; }
-  .card .sub  { margin-top:.6rem; font-size:.71rem; color:var(--muted); }
+  .card .sub { margin-top:.6rem; font-size:.71rem; color:var(--muted); }
 
-  /* CHART CARDS */
+  /* SOI CARD */
+  .soi-card { background:var(--surface); border:2px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:2rem; }
+  .soi-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:10px; }
+  .soi-header h2 { font-size:.85rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+  .soi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:1.25rem; }
+  .soi-metric { background:rgba(255,255,255,0.03); border-radius:10px; padding:1rem; border:1px solid var(--border); }
+  .soi-metric .label { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.5rem; }
+  .soi-metric .val { font-family:'Space Mono',monospace; font-size:1.5rem; font-weight:700; }
+
+  /* SEMAFORO SOI */
+  .semaforo { display:flex; align-items:center; gap:10px; padding:1rem 1.25rem; border-radius:10px; font-size:.85rem; font-weight:500; }
+  .semaforo.verde  { background:rgba(34,197,94,.08);  border:1px solid rgba(34,197,94,.3);  color:#4ade80; }
+  .semaforo.amarillo { background:rgba(234,179,8,.08); border:1px solid rgba(234,179,8,.3);  color:#facc15; }
+  .semaforo.rojo   { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.3);  color:#f87171; }
+  .semaforo-icono  { font-size:1.4rem; }
+
+  /* BARRA SOI */
+  .soi-barra-wrap { margin-top:1rem; }
+  .soi-barra-label { display:flex; justify-content:space-between; font-size:.7rem; color:var(--muted); margin-bottom:6px; }
+  .soi-barra-bg { height:10px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .soi-barra-fill { height:100%; border-radius:999px; transition:width 1s ease; }
+
   .charts-row { display:grid; gap:14px; margin-bottom:14px; }
   .charts-row.two  { grid-template-columns:2fr 1fr; }
   .charts-row.half { grid-template-columns:1fr 1fr; }
@@ -59,112 +61,61 @@
   .chart-header h3 { font-size:.7rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0; }
   .chart-wrap    { position:relative; height:220px; width:100%; }
   .chart-wrap-sm { position:relative; height:180px; width:100%; }
-
-  /* FILTROS DE TIEMPO */
   .filtros { display:flex; gap:4px; }
-  .btn-filtro {
-    font-size:.65rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
-    padding:4px 10px; border-radius:6px; border:1px solid var(--border);
-    background:transparent; color:var(--muted); cursor:pointer;
-    font-family:'DM Sans',sans-serif; transition:all .15s;
-  }
+  .btn-filtro { font-size:.65rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
   .btn-filtro:hover { border-color:rgba(255,255,255,.15); color:var(--text); }
   .btn-filtro.activo { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.4); color:var(--amber); }
   .btn-filtro-temp.activo { background:rgba(236,72,153,.1); border-color:rgba(236,72,153,.35); color:var(--pink); }
-
-  /* GAUGE */
   .gauge-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:220px; gap:8px; }
   .gauge-val  { font-family:'Space Mono',monospace; font-size:1.7rem; font-weight:700; color:var(--teal); text-align:center; }
   .gauge-lbl  { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; text-align:center; }
-
-  /* TABLE */
   .table-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-top:14px; overflow-x:auto; }
-  .table-card h3 { font-size:.7rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:1rem; }
   table { width:100%; border-collapse:collapse; font-size:.8rem; }
   th { text-align:left; padding:6px 10px; color:var(--muted); font-weight:500; font-size:.68rem; letter-spacing:.05em; border-bottom:1px solid var(--border); }
   td { padding:8px 10px; border-bottom:1px solid var(--border); font-family:'Space Mono',monospace; font-size:.76rem; }
   tr:last-child td { border-bottom:none; }
-
-  /* BANNERS Y ALERTAS */
   .error-banner { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); border-radius:10px; padding:.8rem 1rem; margin-bottom:1rem; font-size:.8rem; color:#fca5a5; display:none; }
   #alertas-wrap { display:flex; flex-direction:column; gap:8px; margin-bottom:1.25rem; }
   .alerta { display:flex; align-items:flex-start; gap:10px; padding:.75rem 1rem; border-radius:10px; font-size:.8rem; animation:fadeIn .3s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
   .alerta.warn  { background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25); color:#fcd34d; }
   .alerta.error { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.25);  color:#fca5a5; }
-  .alerta-icono  { font-size:1rem; flex-shrink:0; margin-top:1px; }
-  .alerta-body   { flex:1; }
+  .alerta-icono { font-size:1rem; flex-shrink:0; margin-top:1px; }
+  .alerta-body  { flex:1; }
   .alerta-titulo { font-weight:600; margin-bottom:2px; }
   .alerta-desc   { opacity:.8; font-size:.75rem; }
   .alerta-hora   { font-size:.68rem; opacity:.55; margin-top:3px; font-family:'Space Mono',monospace; }
   .card.alerta-activa { border-color:rgba(239,68,68,.45)!important; box-shadow:0 0 0 1px rgba(239,68,68,.15); }
   .card.warn-activa   { border-color:rgba(245,158,11,.45)!important; box-shadow:0 0 0 1px rgba(245,158,11,.15); }
-
-  /* BANNER DISPOSITIVO OFFLINE */
-  #offline-banner {
-    display: none;
-    align-items: center;
-    gap: 14px;
-    background: rgba(239,68,68,0.07);
-    border: 1px solid rgba(239,68,68,0.35);
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
-    animation: fadeIn .4s ease;
-  }
-  #offline-banner .ob-icono {
-    font-size: 1.6rem; flex-shrink: 0;
-  }
-  #offline-banner .ob-titulo {
-    font-size: .9rem; font-weight: 600; color: #fca5a5; margin-bottom: 3px;
-  }
-  #offline-banner .ob-desc {
-    font-size: .78rem; color: #f87171; opacity: .8;
-  }
-  #offline-banner .ob-tiempo {
-    font-size: .7rem; color: #f87171; opacity: .55;
-    font-family: 'Space Mono', monospace; margin-top: 4px;
-  }
-  /* cuando el ESP32 está offline, opacidad reducida en tarjetas */
-  body.dispositivo-offline .card .val {
-    opacity: 0.35;
-  }
-  body.dispositivo-offline .pulse {
-    background: #ef4444;
-    animation: blink 0.6s infinite;
-  }
-
-  @media (max-width:700px) {
-    .charts-row.two, .charts-row.half { grid-template-columns:1fr; }
-    header { padding:.9rem 1rem; }
-    main { padding:1.5rem 1rem 4rem; }
-    .chart-header { flex-direction:column; align-items:flex-start; }
-  }
+  #offline-banner { display:none; align-items:center; gap:14px; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.35); border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.25rem; animation:fadeIn .4s ease; }
+  #offline-banner .ob-icono { font-size:1.6rem; flex-shrink:0; }
+  #offline-banner .ob-titulo { font-size:.9rem; font-weight:600; color:#fca5a5; margin-bottom:3px; }
+  #offline-banner .ob-desc { font-size:.78rem; color:#f87171; opacity:.8; }
+  #offline-banner .ob-tiempo { font-size:.7rem; color:#f87171; opacity:.55; font-family:'Space Mono',monospace; margin-top:4px; }
+  body.dispositivo-offline .card .val { opacity:0.35; }
+  body.dispositivo-offline .pulse { background:#ef4444; animation:blink 0.6s infinite; }
+  @media (max-width:700px) { .charts-row.two,.charts-row.half{grid-template-columns:1fr;} header{padding:.9rem 1rem;} main{padding:1.5rem 1rem 4rem;} .chart-header{flex-direction:column;align-items:flex-start;} }
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo"><div class="logo-icon">☀</div>ESTACIÓN SOLAR</div>
+  <div class="logo"><div class="logo-icon">☀</div>ESTACIÓN SOLAR UAC</div>
   <div class="pill"><div class="pulse"></div><span id="syncTime">Sincronizando…</span></div>
 </header>
-
 <main>
   <div class="error-banner" id="errBanner"></div>
-
-  <!-- BANNER DISPOSITIVO OFFLINE -->
   <div id="offline-banner">
     <div class="ob-icono">📡</div>
     <div>
       <div class="ob-titulo">ESP32 sin conexión — Dispositivo no iniciado o apagado</div>
-      <div class="ob-desc">No se han recibido datos nuevos en los últimos 5 minutos. El microcontrolador puede estar apagado, sin WiFi o sin alimentación.</div>
+      <div class="ob-desc">No se han recibido datos nuevos en los últimos 5 minutos.</div>
       <div class="ob-tiempo" id="offline-tiempo"></div>
     </div>
   </div>
-
   <div id="alertas-wrap"></div>
 
-  <p class="section-label">Lecturas actuales</p>
+  <!-- MÉTRICAS METEOROLÓGICAS -->
+  <p class="section-label">Variables meteorológicas — ESP32</p>
   <div class="cards">
     <div class="card" id="card-irr">
       <div class="card-top" style="background:linear-gradient(90deg,#f59e0b,#d97706)"></div>
@@ -192,9 +143,93 @@
     </div>
   </div>
 
-  <p class="section-label">Histórico</p>
+  <!-- MÉTRICAS ENPHASE -->
+  <p class="section-label">Producción eléctrica — Enphase IQ7+</p>
+  <div class="cards">
+    <div class="card">
+      <div class="card-top" style="background:linear-gradient(90deg,#f97316,#ea580c)"></div>
+      <h3>Potencia actual</h3>
+      <div><span class="val" id="v-power" style="color:#f97316">--</span><span class="unit">W</span></div>
+      <div class="sub">9 microinversores</div>
+    </div>
+    <div class="card">
+      <div class="card-top" style="background:linear-gradient(90deg,#a855f7,#9333ea)"></div>
+      <h3>Energía hoy</h3>
+      <div><span class="val" id="v-today" style="color:#a855f7">--</span><span class="unit">kWh</span></div>
+      <div class="sub">Producción del día</div>
+    </div>
+    <div class="card">
+      <div class="card-top" style="background:linear-gradient(90deg,#06b6d4,#0891b2)"></div>
+      <h3>Energía total</h3>
+      <div><span class="val" id="v-lifetime" style="color:#06b6d4">--</span><span class="unit">MWh</span></div>
+      <div class="sub">Vida útil del sistema</div>
+    </div>
+    <div class="card">
+      <div class="card-top" style="background:linear-gradient(90deg,#22c55e,#16a34a)"></div>
+      <h3>Estado sistema</h3>
+      <div><span class="val" id="v-status" style="color:#22c55e;font-size:1.1rem">--</span></div>
+      <div class="sub" id="v-modules">9 módulos</div>
+    </div>
+    <div class="card">
+      <div class="card-top" style="background:linear-gradient(90deg,#f59e0b,#b45309)"></div>
+      <h3>Corriente AC</h3>
+      <div><span class="val" id="v-corriente" style="color:#f59e0b">--</span><span class="unit">A</span></div>
+      <div class="sub">P(W) ÷ 218.8 V</div>
+    </div>
+    <div class="card">
+      <div class="card-top" style="background:linear-gradient(90deg,#e879f9,#c026d3)"></div>
+      <h3>Voltaje CA</h3>
+      <div><span class="val" id="v-voltaje" style="color:#e879f9">218.8</span><span class="unit">V</span></div>
+      <div class="sub">Microinversor IQ7+</div>
+    </div>
+  </div>
 
-  <!-- IRRADIANCIA -->
+  <!-- PANEL SOI -->
+  <p class="section-label">Índice de suciedad del panel — Soiling Index (SOI)</p>
+  <div class="soi-card" id="soi-card">
+    <div class="soi-header">
+      <h2>Estado de limpieza del generador fotovoltaico</h2>
+      <span style="font-size:.72rem;color:var(--muted);font-family:'Space Mono',monospace" id="soi-hora">--</span>
+    </div>
+    <div class="soi-grid">
+      <div class="soi-metric">
+        <div class="label">Potencia real</div>
+        <div class="val" id="soi-real" style="color:#f97316">-- W</div>
+      </div>
+      <div class="soi-metric">
+        <div class="label">Potencia esperada (panel limpio)</div>
+        <div class="val" id="soi-esp" style="color:#22c55e">-- W</div>
+      </div>
+      <div class="soi-metric">
+        <div class="label">Pérdida estimada</div>
+        <div class="val" id="soi-perdida" style="color:#f59e0b">-- W</div>
+      </div>
+      <div class="soi-metric">
+        <div class="label">Soiling Index</div>
+        <div class="val" id="soi-valor" style="color:#f59e0b">--%</div>
+      </div>
+    </div>
+    <div class="soi-barra-wrap">
+      <div class="soi-barra-label">
+        <span>Limpio (0%)</span>
+        <span>Limpiar (5%)</span>
+        <span>Crítico (10%+)</span>
+      </div>
+      <div class="soi-barra-bg">
+        <div class="soi-barra-fill" id="soi-barra" style="width:0%;background:#22c55e"></div>
+      </div>
+    </div>
+    <div class="semaforo verde" id="soi-semaforo" style="margin-top:1rem">
+      <span class="semaforo-icono">🟢</span>
+      <div>
+        <div style="font-weight:600" id="soi-titulo">Esperando datos...</div>
+        <div style="font-size:.75rem;opacity:.8;margin-top:2px" id="soi-desc">Calculando Soiling Index con datos en tiempo real</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRÁFICAS -->
+  <p class="section-label">Histórico</p>
   <div class="charts-row two">
     <div class="chart-card">
       <div class="chart-header">
@@ -221,8 +256,6 @@
       </div>
     </div>
   </div>
-
-  <!-- TEMPERATURA -->
   <div class="charts-row half">
     <div class="chart-card">
       <div class="chart-header">
@@ -237,8 +270,8 @@
       <div class="chart-wrap-sm"><canvas id="cTemp"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-header"><h3>Humedad histórica (%)</h3></div>
-      <div class="chart-wrap-sm"><canvas id="cHum"></canvas></div>
+      <div class="chart-header"><h3>Potencia Enphase (W)</h3></div>
+      <div class="chart-wrap-sm"><canvas id="cPower"></canvas></div>
     </div>
   </div>
 
@@ -246,11 +279,8 @@
   <div class="table-card">
     <table>
       <thead><tr>
-        <th>Timestamp</th>
-        <th>Irradiancia (W/m²)</th>
-        <th>T. Panel (°C)</th>
-        <th>T. Ambiente (°C)</th>
-        <th>Humedad (%)</th>
+        <th>Timestamp</th><th>Irradiancia (W/m²)</th><th>T. Panel (°C)</th>
+        <th>T. Ambiente (°C)</th><th>Humedad (%)</th>
       </tr></thead>
       <tbody id="tBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Cargando…</td></tr></tbody>
     </table>
@@ -262,25 +292,178 @@
 // ════════════════════════════════════════
 //  CONFIGURACIÓN
 // ════════════════════════════════════════
-const CSV_URL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
-const COL        = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5 };
-const REFRESH_MS = 60000;
+const CSV_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
+const COL         = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5 };
+const REFRESH_MS  = 60000;
+const OFFLINE_MS  = 5 * 60 * 1000;
 
-// Estado actual de filtros
+// Enphase
+const ENPHASE_API_KEY     = '13eda577f6eec19221322ec847499e0e';
+const ENPHASE_CLIENT_ID   = '132a3b7b79591d365b99db31e8a75b59';
+const ENPHASE_CLIENT_SECRET = 'e25fe2f3be2966698a8d79a34a620074';
+const ENPHASE_SYSTEM_ID   = '3293181';
+const ENPHASE_REFRESH_TOKEN = 'eyJhbGciOiJSUzI1NiJ9.eyJhcHBfdHlwZSI6InN5c3RlbSIsInVzZXJfaWQiOiIyOTM0Nzk0IiwiZW5sX3VpZCI6IjI5MzQ3OTQiLCJlbWFpbCI6ImxhZ29zbHVpczM2NkBnbWFpbC5jb20iLCJlbmxfY2lkIjoiIiwiZW5sX3Bhc3N3b3JkX2xhc3RfY2hhbmdlZCI6IjE2NTcyMjM3NTgiLCJzY29wZSI6InJlYWQgd3JpdGUiLCJpc3MiOiJFbnBoYXNlIiwiaWF0IjoxNzQ4MzYzODQ5LCJleHAiOjE3NzkwMTM4NDl9.RQnp0jWwh-gEVJL0gOD7FLvsdpI5qmQGuO9cQ0Xhp_XtwTwhZGD5EOUzmmT2wS6b5LLv-EgxDBCSpkyH2OM-lDuFL_xRgNaXBinNT37eOsWsTZiVD-wmjOpcZqsJG4UvVpkvXpejoTWPhzx78F-8F3iYcf8uP7f9ny2tzqxEXdM';
+
+// Parámetros del panel (Enphase IQ7+ con panel típico 360W)
+const POTENCIA_NOMINAL_W  = 3262;  // W pico total del sistema (size_w de la API)
+const IRRADIANCIA_STC     = 1000;  // W/m² condiciones estándar
+const EFICIENCIA_TEMP     = 0.004; // 0.4% pérdida por °C sobre 25°C
+const TEMP_REF            = 25;    // °C temperatura de referencia STC
+const SOI_UMBRAL_WARN     = 5;     // % alerta amarilla
+const SOI_UMBRAL_ERROR    = 10;    // % alerta roja
+
 let filtroIrr  = '1d';
 let filtroTemp = '1d';
-let allRows    = [];   // todos los datos crudos parseados
+let allRows    = [];
+let enphaseToken = null;
+let powerHistory = [];
+
+// ════════════════════════════════════════
+//  ENPHASE API
+// ════════════════════════════════════════
+async function refreshEnphaseToken() {
+  try {
+    const credentials = btoa(ENPHASE_CLIENT_ID + ':' + ENPHASE_CLIENT_SECRET);
+    const res = await fetch(
+      `https://api.enphaseenergy.com/oauth/token?grant_type=refresh_token&refresh_token=${ENPHASE_REFRESH_TOKEN}`,
+      { method:'POST', headers:{ Authorization:'Basic ' + credentials } }
+    );
+    if (!res.ok) throw new Error('Token refresh failed');
+    const data = await res.json();
+    enphaseToken = data.access_token;
+    return true;
+  } catch(e) {
+    console.warn('Enphase token refresh error:', e.message);
+    return false;
+  }
+}
+
+async function fetchEnphase() {
+  if (!enphaseToken) {
+    const ok = await refreshEnphaseToken();
+    if (!ok) return;
+  }
+  try {
+    const res = await fetch(
+      `https://api.enphaseenergy.com/api/v4/systems/${ENPHASE_SYSTEM_ID}/summary?key=${ENPHASE_API_KEY}`,
+      { headers:{ Authorization:'Bearer ' + enphaseToken } }
+    );
+    if (res.status === 401) {
+      enphaseToken = null;
+      await refreshEnphaseToken();
+      return fetchEnphase();
+    }
+    if (!res.ok) throw new Error('Enphase API error ' + res.status);
+    const data = await res.json();
+    renderEnphase(data);
+  } catch(e) {
+    console.warn('Enphase fetch error:', e.message);
+  }
+}
+
+function renderEnphase(data) {
+  const powerW    = data.current_power || 0;
+  const todayWh   = data.energy_today  || 0;
+  const lifetimeWh= data.energy_lifetime || 0;
+  const status    = data.status || '--';
+
+  document.getElementById('v-power').textContent    = powerW.toLocaleString('es-CO');
+  document.getElementById('v-today').textContent    = (todayWh / 1000).toFixed(2);
+  document.getElementById('v-lifetime').textContent = (lifetimeWh / 1000000).toFixed(2);
+  document.getElementById('v-status').textContent   = status === 'normal' ? 'Normal ✓' : status;
+  document.getElementById('v-modules').textContent  = `${data.modules || 9} módulos`;
+
+  // Corriente calculada: I = P / V
+  const VOLTAJE_CA = 218.8;
+  const corriente  = powerW > 0 ? (powerW / VOLTAJE_CA).toFixed(2) : '0.00';
+  document.getElementById('v-corriente').textContent = corriente;
+  document.getElementById('v-voltaje').textContent   = VOLTAJE_CA.toFixed(1);
+
+  // Guardar historial de potencia
+  powerHistory.push({ t: new Date(), w: powerW });
+  if (powerHistory.length > 300) powerHistory.shift();
+  actualizarGraficaPower();
+
+  // Calcular SOI si hay irradiancia disponible
+  const irr = parseFloat(document.getElementById('v-irr').textContent);
+  const tDS  = parseFloat(document.getElementById('v-tds').textContent);
+  if (!isNaN(irr) && irr > 10) {
+    calcularSOI(irr, tDS, powerW);
+  }
+}
+
+// ════════════════════════════════════════
+//  CÁLCULO SOI
+// ════════════════════════════════════════
+function calcularSOI(irradiancia, tempPanel, potenciaReal) {
+  // Potencia esperada corregida por temperatura
+  const factorIrr  = irradiancia / IRRADIANCIA_STC;
+  const deltaTemp  = isNaN(tempPanel) ? 0 : (tempPanel - TEMP_REF) * EFICIENCIA_TEMP;
+  const potEsperada = POTENCIA_NOMINAL_W * factorIrr * (1 - deltaTemp);
+
+  if (potEsperada <= 0) return;
+
+  const soi     = Math.max(0, (1 - potenciaReal / potEsperada) * 100);
+  const perdida = Math.max(0, potEsperada - potenciaReal);
+  const ahora   = new Date().toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('soi-real').textContent    = potenciaReal.toFixed(0) + ' W';
+  document.getElementById('soi-esp').textContent     = potEsperada.toFixed(0) + ' W';
+  document.getElementById('soi-perdida').textContent = perdida.toFixed(0) + ' W';
+  document.getElementById('soi-valor').textContent   = soi.toFixed(1) + '%';
+  document.getElementById('soi-hora').textContent    = 'Calculado a las ' + ahora;
+
+  // Barra de progreso
+  const pct = Math.min(soi, 15);
+  const barraEl = document.getElementById('soi-barra');
+  barraEl.style.width = (pct / 15 * 100) + '%';
+
+  // Semáforo
+  const sem   = document.getElementById('soi-semaforo');
+  const titulo = document.getElementById('soi-titulo');
+  const desc   = document.getElementById('soi-desc');
+
+  if (soi < SOI_UMBRAL_WARN) {
+    sem.className = 'semaforo verde';
+    document.getElementById('soi-semaforo').children[0].textContent = '🟢';
+    titulo.textContent = `Panel limpio — Pérdida estimada: ${soi.toFixed(1)}%`;
+    desc.textContent   = 'El sistema opera dentro del rango esperado. No se requiere limpieza.';
+    barraEl.style.background = '#22c55e';
+  } else if (soi < SOI_UMBRAL_ERROR) {
+    sem.className = 'semaforo amarillo';
+    document.getElementById('soi-semaforo').children[0].textContent = '🟡';
+    titulo.textContent = `Suciedad leve detectada — Pérdida estimada: ${soi.toFixed(1)}%`;
+    desc.textContent   = `El panel está perdiendo ${perdida.toFixed(0)} W respecto a lo esperado. Se recomienda programar limpieza pronto.`;
+    barraEl.style.background = '#eab308';
+  } else {
+    sem.className = 'semaforo rojo';
+    document.getElementById('soi-semaforo').children[0].textContent = '🔴';
+    titulo.textContent = `⚠ Limpieza necesaria — Pérdida estimada: ${soi.toFixed(1)}%`;
+    desc.textContent   = `El panel está perdiendo ${perdida.toFixed(0)} W. La suciedad supera el umbral crítico del ${SOI_UMBRAL_ERROR}%. Se requiere limpieza inmediata.`;
+    barraEl.style.background = '#ef4444';
+
+    // Agregar alerta en el panel de alertas
+    const wrap = document.getElementById('alertas-wrap');
+    const yaExiste = document.getElementById('alerta-soi');
+    if (!yaExiste) {
+      const div = document.createElement('div');
+      div.id = 'alerta-soi';
+      div.className = 'alerta error';
+      div.innerHTML = `<span class="alerta-icono">🔴</span><div class="alerta-body"><div class="alerta-titulo">Panel sucio — Limpieza requerida (SOI: ${soi.toFixed(1)}%)</div><div class="alerta-desc">Pérdida de ${perdida.toFixed(0)} W respecto a potencia esperada de ${potEsperada.toFixed(0)} W con irradiancia actual de ${irradiancia.toFixed(0)} W/m².</div><div class="alerta-hora">Detectado a las ${ahora}</div></div>`;
+      wrap.prepend(div);
+    }
+  }
+}
 
 // ════════════════════════════════════════
 //  PARSEO CSV
 // ════════════════════════════════════════
 function parseTimestamp(ts) {
-  // formatos: "14/4/2026 22:40:40" o "14/04/2026 22:40:40"
   const [fecha, hora] = ts.split(' ');
   if (!fecha || !hora) return null;
-  const [d, m, y] = fecha.split('/');
-  const [h, mi, s] = hora.split(':');
-  return new Date(+y, +m - 1, +d, +h, +mi, +(s||0));
+  const [d,m,y] = fecha.split('/');
+  const [h,mi,s] = hora.split(':');
+  return new Date(+y, +m-1, +d, +h, +mi, +(s||0));
 }
 
 function parseCSV(text) {
@@ -293,39 +476,32 @@ function parseCSV(text) {
     const tDS   = parseFloat(clean[COL.tDS]);
     const tDHT  = parseFloat(clean[COL.tDHT]);
     return {
-      ts,
-      dt  : parseTimestamp(ts),
-      irr : parseFloat(clean[COL.irr])  || 0,
-      tDS : (!isNaN(tDS)  && tDS  > -10 && tDS  < 100) ? tDS  : null,  // filtra errores DS18B20
-      tDHT: (!isNaN(tDHT) && tDHT > -10 && tDHT < 80)  ? tDHT : null,  // filtra errores DHT22
-      hum : parseFloat(clean[COL.hum])  || 0
+      ts, dt: parseTimestamp(ts),
+      irr : parseFloat(clean[COL.irr]) || 0,
+      tDS : (!isNaN(tDS)  && tDS  > -10 && tDS  < 100) ? tDS  : null,
+      tDHT: (!isNaN(tDHT) && tDHT > -10 && tDHT < 80)  ? tDHT : null,
+      hum : parseFloat(clean[COL.hum]) || 0
     };
   }).filter(r => r.ts !== '--' && r.dt !== null);
 }
 
-// ════════════════════════════════════════
-//  FILTRO DE TIEMPO
-// ════════════════════════════════════════
 function filtrarPorPeriodo(rows, periodo) {
   if (periodo === 'all') return rows;
   const ahora = new Date();
-  const msMap = { '1d': 86400000, '7d': 604800000, '30d': 2592000000 };
-  const ms = msMap[periodo] || 86400000;
-  return rows.filter(r => r.dt && (ahora - r.dt) <= ms);
+  const msMap = { '1d':86400000, '7d':604800000, '30d':2592000000 };
+  return rows.filter(r => r.dt && (ahora - r.dt) <= (msMap[periodo] || 86400000));
 }
 
-// Para gráficas con muchos puntos, diezmar para no sobrecargar
-function diezmar(rows, maxPuntos = 300) {
-  if (rows.length <= maxPuntos) return rows;
-  const paso = Math.ceil(rows.length / maxPuntos);
-  return rows.filter((_, i) => i % paso === 0);
+function diezmar(rows, max=300) {
+  if (rows.length <= max) return rows;
+  const paso = Math.ceil(rows.length / max);
+  return rows.filter((_,i) => i % paso === 0);
 }
 
-// Formato legible del eje X según período
 function formatLabel(r, periodo) {
   if (!r.dt) return r.ts;
   const d = r.dt;
-  if (periodo === '1d') return d.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'});
+  if (periodo === '1d') return d.toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'});
   if (periodo === '7d') return `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:00`;
   return `${d.getDate()}/${d.getMonth()+1}`;
 }
@@ -336,9 +512,9 @@ function formatLabel(r, periodo) {
 function setGauge(pct) {
   const p = Math.max(0, Math.min(100, pct));
   document.getElementById('gArc').setAttribute('stroke-dasharray', `${204*p/100} ${204-204*p/100}`);
-  const a = (-180 + 180*p/100) * Math.PI/180;
-  document.getElementById('gDot').setAttribute('cx', (80+65*Math.cos(a)).toFixed(1));
-  document.getElementById('gDot').setAttribute('cy', (85+65*Math.sin(a)).toFixed(1));
+  const a = (-180+180*p/100)*Math.PI/180;
+  document.getElementById('gDot').setAttribute('cx',(80+65*Math.cos(a)).toFixed(1));
+  document.getElementById('gDot').setAttribute('cy',(85+65*Math.sin(a)).toFixed(1));
   document.getElementById('gVal').textContent = p.toFixed(1)+'%';
 }
 
@@ -347,220 +523,123 @@ function setGauge(pct) {
 // ════════════════════════════════════════
 const TICK = { color:'#64748b', font:{size:10,family:'Space Mono'} };
 const GRID = { color:'rgba(255,255,255,0.04)' };
-
-const DEF = {
-  responsive:true, maintainAspectRatio:false,
-  animation:{duration:400},
+const DEF  = { responsive:true, maintainAspectRatio:false, animation:{duration:400},
   plugins:{legend:{display:false}},
-  scales:{
-    x:{ ticks:{...TICK, maxTicksLimit:8, maxRotation:30}, grid:GRID },
-    y:{ ticks:TICK, grid:GRID }
-  }
+  scales:{ x:{ticks:{...TICK,maxTicksLimit:8,maxRotation:30},grid:GRID}, y:{ticks:TICK,grid:GRID} }
 };
 
-let cIrr, cTemp, cHum;
+let cIrr, cTemp, cHum, cPower;
 
 function initCharts() {
   cIrr = new Chart(document.getElementById('cIrr'), {
-    type:'line',
-    data:{ labels:[], datasets:[{
-      data:[], borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.08)',
-      fill:true, tension:0.4, pointRadius:1.5, borderWidth:2,
-      spanGaps: false
-    }]},
-    options:{
-      ...DEF,
-      scales:{
-        x:{ ticks:{...TICK, maxTicksLimit:8, maxRotation:30}, grid:GRID },
-        y:{ ticks:TICK, grid:GRID, min:0, title:{ display:true, text:'W/m²', color:'#64748b', font:{size:10} } }
-      }
-    }
+    type:'line', data:{labels:[],datasets:[{data:[],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.08)',fill:true,tension:0.4,pointRadius:1.5,borderWidth:2,spanGaps:false}]},
+    options:{...DEF,scales:{x:{ticks:{...TICK,maxTicksLimit:8,maxRotation:30},grid:GRID},y:{ticks:TICK,grid:GRID,min:0,title:{display:true,text:'W/m²',color:'#64748b',font:{size:10}}}}}
   });
-
   cTemp = new Chart(document.getElementById('cTemp'), {
-    type:'line',
-    data:{ labels:[], datasets:[
-      { label:'Panel (DS18B20)',    data:[], borderColor:'#ec4899', backgroundColor:'transparent', tension:0.4, pointRadius:1.5, borderWidth:2, spanGaps:false },
-      { label:'Ambiente (DHT22)',   data:[], borderColor:'#3b82f6', backgroundColor:'transparent', tension:0.4, pointRadius:1.5, borderWidth:2, borderDash:[4,3], spanGaps:false }
+    type:'line', data:{labels:[],datasets:[
+      {label:'Panel (DS18B20)',data:[],borderColor:'#ec4899',backgroundColor:'transparent',tension:0.4,pointRadius:1.5,borderWidth:2,spanGaps:false},
+      {label:'Ambiente (DHT22)',data:[],borderColor:'#3b82f6',backgroundColor:'transparent',tension:0.4,pointRadius:1.5,borderWidth:2,borderDash:[4,3],spanGaps:false}
     ]},
-    options:{
-      ...DEF,
-      plugins:{
-        legend:{
-          display:true,
-          labels:{ color:'#64748b', font:{size:10,family:'DM Sans'}, usePointStyle:true, boxWidth:8 }
-        }
-      },
-      scales:{
-        x:{ ticks:{...TICK, maxTicksLimit:8, maxRotation:30}, grid:GRID },
-        y:{
-          ticks:TICK, grid:GRID,
-          min:15, max:65,
-          title:{ display:true, text:'°C', color:'#64748b', font:{size:10} }
-        }
-      }
-    }
+    options:{...DEF,plugins:{legend:{display:true,labels:{color:'#64748b',font:{size:10,family:'DM Sans'},usePointStyle:true,boxWidth:8}}},scales:{x:{ticks:{...TICK,maxTicksLimit:8,maxRotation:30},grid:GRID},y:{ticks:TICK,grid:GRID,min:15,max:65,title:{display:true,text:'°C',color:'#64748b',font:{size:10}}}}}
   });
-
-  cHum = new Chart(document.getElementById('cHum'), {
-    type:'bar',
-    data:{ labels:[], datasets:[{
-      data:[], backgroundColor:'rgba(20,184,166,0.45)',
-      borderColor:'#14b8a6', borderWidth:1, borderRadius:3
-    }]},
-    options:{
-      ...DEF,
-      scales:{
-        x:{ ticks:{...TICK, maxTicksLimit:8, maxRotation:30}, grid:GRID },
-        y:{ ticks:TICK, grid:GRID, min:0, max:100,
-            title:{ display:true, text:'%', color:'#64748b', font:{size:10} } }
-      }
-    }
+  cPower = new Chart(document.getElementById('cPower'), {
+    type:'line', data:{labels:[],datasets:[{data:[],borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.08)',fill:true,tension:0.4,pointRadius:1.5,borderWidth:2}]},
+    options:{...DEF,scales:{x:{ticks:{...TICK,maxTicksLimit:6,maxRotation:30},grid:GRID},y:{ticks:TICK,grid:GRID,min:0,title:{display:true,text:'W',color:'#64748b',font:{size:10}}}}}
   });
 }
 
-// ════════════════════════════════════════
-//  ACTUALIZAR GRÁFICAS CON FILTRO
-// ════════════════════════════════════════
+function actualizarGraficaPower() {
+  const labels = powerHistory.map(p => p.t.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}));
+  cPower.data.labels = labels;
+  cPower.data.datasets[0].data = powerHistory.map(p => p.w);
+  cPower.update();
+}
+
 function actualizarGraficas() {
-  // — Irradiancia —
   const rowsI = diezmar(filtrarPorPeriodo(allRows, filtroIrr));
-  cIrr.data.labels            = rowsI.map(r => formatLabel(r, filtroIrr));
-  cIrr.data.datasets[0].data  = rowsI.map(r => r.irr);
-  // puntos más grandes cuando hay pocos datos
+  cIrr.data.labels = rowsI.map(r => formatLabel(r, filtroIrr));
+  cIrr.data.datasets[0].data = rowsI.map(r => r.irr);
   cIrr.data.datasets[0].pointRadius = rowsI.length > 100 ? 0 : 2;
   cIrr.update();
 
-  // — Temperatura —
   const rowsT = diezmar(filtrarPorPeriodo(allRows, filtroTemp));
-  cTemp.data.labels            = rowsT.map(r => formatLabel(r, filtroTemp));
-  cTemp.data.datasets[0].data  = rowsT.map(r => r.tDS);    // null = brecha en la línea
-  cTemp.data.datasets[1].data  = rowsT.map(r => r.tDHT);
+  cTemp.data.labels = rowsT.map(r => formatLabel(r, filtroTemp));
+  cTemp.data.datasets[0].data = rowsT.map(r => r.tDS);
+  cTemp.data.datasets[1].data = rowsT.map(r => r.tDHT);
   cTemp.data.datasets[0].pointRadius = rowsT.length > 100 ? 0 : 2;
   cTemp.data.datasets[1].pointRadius = rowsT.length > 100 ? 0 : 2;
   cTemp.update();
-
-  // — Humedad (siempre últimas 24h para no sobrecargar la barra) —
-  const rowsH = diezmar(filtrarPorPeriodo(allRows, '1d'), 200);
-  cHum.data.labels           = rowsH.map(r => formatLabel(r, '1d'));
-  cHum.data.datasets[0].data = rowsH.map(r => r.hum);
-  cHum.update();
 }
 
-// Botones de filtro
 function setFiltro(tipo, periodo, btn) {
-  const contenedor = document.getElementById('filtros-' + tipo);
-  contenedor.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('activo'));
+  document.getElementById('filtros-'+tipo).querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('activo'));
   btn.classList.add('activo');
-  if (tipo === 'irr')  filtroIrr  = periodo;
-  if (tipo === 'temp') filtroTemp = periodo;
+  if (tipo==='irr')  filtroIrr  = periodo;
+  if (tipo==='temp') filtroTemp = periodo;
   actualizarGraficas();
 }
 
 // ════════════════════════════════════════
-//  ALERTAS
+//  ALERTAS SENSORES
 // ════════════════════════════════════════
 const REGLAS = [
-  {
-    id:'irr-nocturna', card:'card-irr',
-    check(r) {
-      const p = (r.ts.split(' ')[1]||'').split(':');
-      const t = (parseInt(p[0])||0)*60+(parseInt(p[1])||0);
-      const noche = t < 360 || t >= 1110;
-      if (noche && r.irr > 5)          return {titulo:'Irradiancia anómala — horario nocturno',    desc:`${r.irr.toFixed(1)} W/m² detectado de noche. Se esperaba 0 W/m².`, tipo:'error'};
-      if (!noche && r.irr < 1)          return {titulo:'Piranómetro sin señal — horario diurno',    desc:`0 W/m² entre 6:00 am y 6:30 pm. Posible error Modbus o sensor desconectado.`, tipo:'warn'};
-      return null;
-    }
-  },
-  {
-    id:'temp-panel', card:'card-tds',
-    check(r) {
-      if (r.tDS === null)  return {titulo:'Error de lectura — Sensor panel',  desc:`DS18B20 reportó un valor fuera de rango. Posible fallo de comunicación 1-Wire.`, tipo:'error'};
-      if (r.tDS > 90)      return {titulo:'Temperatura panel crítica',         desc:`DS18B20: ${r.tDS.toFixed(1)} °C. Supera el límite seguro del módulo (~85 °C).`,    tipo:'error'};
-      return null;
-    }
-  },
-  {
-    id:'temp-amb', card:'card-tdht',
-    check(r) {
-      if (r.tDHT === null) return {titulo:'Error de lectura — Sensor ambiente', desc:`DHT22 reportó un valor fuera de rango. Revisa el sensor.`, tipo:'error'};
-      if (r.tDHT > 60)     return {titulo:'Temperatura ambiente anómala',        desc:`DHT22: ${r.tDHT.toFixed(1)} °C. Valor inusualmente alto para Barranquilla.`, tipo:'warn'};
-      return null;
-    }
-  },
-  {
-    id:'humedad', card:'card-hum',
-    check(r) {
-      if (r.hum < 1 || r.hum > 100) return {titulo:'Humedad fuera de rango físico', desc:`DHT22: ${r.hum.toFixed(1)} %. El rango válido es 0–100 %.`, tipo:'error'};
-      return null;
-    }
-  }
+  { id:'irr-nocturna', card:'card-irr', check(r) {
+    const p=(r.ts.split(' ')[1]||'').split(':'); const t=(parseInt(p[0])||0)*60+(parseInt(p[1])||0);
+    const noche=t<360||t>=1110;
+    if(noche&&r.irr>5)    return{titulo:'Irradiancia anómala — horario nocturno',desc:`${r.irr.toFixed(1)} W/m² de noche.`,tipo:'error'};
+    if(!noche&&r.irr<1)   return{titulo:'Piranómetro sin señal — horario diurno',desc:`0 W/m² entre 6:00 am y 6:30 pm. Posible error Modbus.`,tipo:'warn'};
+    return null;
+  }},
+  { id:'temp-panel', card:'card-tds', check(r) {
+    if(r.tDS===null) return{titulo:'Error lectura sensor panel',desc:`DS18B20 fuera de rango.`,tipo:'error'};
+    if(r.tDS>90)     return{titulo:'Temperatura panel crítica',desc:`DS18B20: ${r.tDS.toFixed(1)} °C. Supera límite seguro.`,tipo:'error'};
+    return null;
+  }},
+  { id:'temp-amb', card:'card-tdht', check(r) {
+    if(r.tDHT===null) return{titulo:'Error lectura sensor ambiente',desc:`DHT22 fuera de rango.`,tipo:'error'};
+    if(r.tDHT>60)     return{titulo:'Temperatura ambiente anómala',desc:`DHT22: ${r.tDHT.toFixed(1)} °C.`,tipo:'warn'};
+    return null;
+  }},
+  { id:'humedad', card:'card-hum', check(r) {
+    if(r.hum<1||r.hum>100) return{titulo:'Humedad fuera de rango',desc:`DHT22: ${r.hum.toFixed(1)} %.`,tipo:'error'};
+    return null;
+  }}
 ];
 
 function evalAlertas(latest) {
   const wrap  = document.getElementById('alertas-wrap');
   const ahora = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  ['card-irr','card-tds','card-tdht','card-hum'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('alerta-activa','warn-activa');
-  });
-  wrap.innerHTML = REGLAS.map(regla => {
-    const res = regla.check(latest);
-    if (!res) return '';
-    const card = document.getElementById(regla.card);
-    if (card) card.classList.add(res.tipo==='error' ? 'alerta-activa' : 'warn-activa');
-    return `<div class="alerta ${res.tipo}">
-      <span class="alerta-icono">${res.tipo==='error'?'⛔':'⚠️'}</span>
-      <div class="alerta-body">
-        <div class="alerta-titulo">${res.titulo}</div>
-        <div class="alerta-desc">${res.desc}</div>
-        <div class="alerta-hora">Detectado a las ${ahora}</div>
-      </div>
-    </div>`;
+  ['card-irr','card-tds','card-tdht','card-hum'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('alerta-activa','warn-activa'); });
+  const alertasHtml = REGLAS.map(regla => {
+    const res=regla.check(latest); if(!res) return '';
+    const card=document.getElementById(regla.card); if(card) card.classList.add(res.tipo==='error'?'alerta-activa':'warn-activa');
+    return `<div class="alerta ${res.tipo}"><span class="alerta-icono">${res.tipo==='error'?'⛔':'⚠️'}</span><div class="alerta-body"><div class="alerta-titulo">${res.titulo}</div><div class="alerta-desc">${res.desc}</div><div class="alerta-hora">Detectado a las ${ahora}</div></div></div>`;
   }).join('');
+  const soiAlerta = document.getElementById('alerta-soi');
+  wrap.innerHTML = alertasHtml;
+  if (soiAlerta) wrap.prepend(soiAlerta);
 }
 
 // ════════════════════════════════════════
-//  DETECCIÓN DE DISPOSITIVO OFFLINE
+//  OFFLINE
 // ════════════════════════════════════════
-const OFFLINE_MS = 5 * 60 * 1000;  // 5 minutos sin datos nuevos = offline
-
 function verificarOffline(latest) {
-  const banner  = document.getElementById('offline-banner');
-  const tiempoEl = document.getElementById('offline-tiempo');
-
-  if (!latest || !latest.dt) { mostrarOffline('Último dato sin timestamp válido.'); return; }
-
-  const atraso = Date.now() - latest.dt.getTime();
-
-  if (atraso > OFFLINE_MS) {
-    // Calcular hace cuánto fue el último dato
-    const min = Math.floor(atraso / 60000);
-    const hrs = Math.floor(min / 60);
-    let textoAtraso = '';
-    if (hrs > 0) textoAtraso = `Último dato recibido hace ${hrs} h ${min % 60} min`;
-    else         textoAtraso = `Último dato recibido hace ${min} min`;
-    mostrarOffline(textoAtraso);
-  } else {
-    ocultarOffline();
-  }
+  if(!latest||!latest.dt){mostrarOffline('Último dato sin timestamp válido.');return;}
+  const atraso=Date.now()-latest.dt.getTime();
+  if(atraso>OFFLINE_MS){
+    const min=Math.floor(atraso/60000),hrs=Math.floor(min/60);
+    mostrarOffline(hrs>0?`Último dato hace ${hrs}h ${min%60}min`:`Último dato hace ${min} min`);
+  } else { ocultarOffline(); }
 }
-
-function mostrarOffline(textoTiempo) {
-  const banner = document.getElementById('offline-banner');
-  banner.style.display = 'flex';
-  document.getElementById('offline-tiempo').textContent = textoTiempo;
+function mostrarOffline(txt){
+  document.getElementById('offline-banner').style.display='flex';
+  document.getElementById('offline-tiempo').textContent=txt;
   document.body.classList.add('dispositivo-offline');
-  // Poner tarjetas en 0
-  ['v-irr','v-tds','v-tdht','v-hum'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el && el.textContent !== '--') el.textContent = '0.0';
-  });
+  ['v-irr','v-tds','v-tdht','v-hum'].forEach(id=>{const el=document.getElementById(id);if(el&&el.textContent!=='--')el.textContent='0.0';});
   setGauge(0);
 }
-
-function ocultarOffline() {
-  document.getElementById('offline-banner').style.display = 'none';
+function ocultarOffline(){
+  document.getElementById('offline-banner').style.display='none';
   document.body.classList.remove('dispositivo-offline');
 }
 
@@ -568,68 +647,57 @@ function ocultarOffline() {
 //  RENDER
 // ════════════════════════════════════════
 function render(rows) {
-  if (!rows.length) return;
-  allRows = rows;
-
-  const latest = rows[rows.length - 1];
-
-  // Verificar si el ESP32 está offline antes de mostrar datos
+  if(!rows.length) return;
+  allRows=rows;
+  const latest=rows[rows.length-1];
   verificarOffline(latest);
-
-  // Tarjetas — mostrar último valor válido para temperatura
-  const ultTDS  = [...rows].reverse().find(r => r.tDS  !== null);
-  const ultTDHT = [...rows].reverse().find(r => r.tDHT !== null);
-
+  const ultTDS  = [...rows].reverse().find(r=>r.tDS!==null);
+  const ultTDHT = [...rows].reverse().find(r=>r.tDHT!==null);
   document.getElementById('v-irr').textContent  = Number(latest.irr).toFixed(1);
   document.getElementById('v-tds').textContent  = ultTDS  ? Number(ultTDS.tDS).toFixed(1)   : '--';
   document.getElementById('v-tdht').textContent = ultTDHT ? Number(ultTDHT.tDHT).toFixed(1) : '--';
   document.getElementById('v-hum').textContent  = Number(latest.hum).toFixed(1);
-
-  // Solo actualizar gauge si está online
-  if (!document.body.classList.contains('dispositivo-offline')) {
-    setGauge(latest.hum);
-  }
-
+  if(!document.body.classList.contains('dispositivo-offline')) setGauge(latest.hum);
   evalAlertas(latest);
   actualizarGraficas();
-
-  // Tabla últimas 10
-  document.getElementById('tBody').innerHTML = [...rows].reverse().slice(0,10).map(r => `
+  document.getElementById('tBody').innerHTML=[...rows].reverse().slice(0,10).map(r=>`
     <tr>
       <td style="color:var(--muted);font-size:.72rem">${r.ts}</td>
       <td style="color:#f59e0b">${Number(r.irr).toFixed(2)}</td>
-      <td style="color:#ec4899">${r.tDS  !== null ? Number(r.tDS).toFixed(2)  : '<span style="color:#ef4444">error</span>'}</td>
-      <td style="color:#3b82f6">${r.tDHT !== null ? Number(r.tDHT).toFixed(2) : '<span style="color:#ef4444">error</span>'}</td>
+      <td style="color:#ec4899">${r.tDS!==null?Number(r.tDS).toFixed(2):'<span style="color:#ef4444">error</span>'}</td>
+      <td style="color:#3b82f6">${r.tDHT!==null?Number(r.tDHT).toFixed(2):'<span style="color:#ef4444">error</span>'}</td>
       <td style="color:#14b8a6">${Number(r.hum).toFixed(2)}</td>
     </tr>`).join('');
-
-  document.getElementById('syncTime').textContent =
-    'Sync: ' + new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  document.getElementById('errBanner').style.display = 'none';
+  document.getElementById('syncTime').textContent='Sync: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('errBanner').style.display='none';
 }
 
 // ════════════════════════════════════════
-//  FETCH
+//  FETCH CSV
 // ════════════════════════════════════════
 async function fetchData() {
   try {
-    const res  = await fetch(CSV_URL + '&t=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const rows = parseCSV(await res.text());
-    if (rows.length) render(rows);
+    const res=await fetch(CSV_URL+'&t='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rows=parseCSV(await res.text());
+    if(rows.length) render(rows);
     else throw new Error('Sin filas de datos');
   } catch(e) {
-    document.getElementById('errBanner').textContent = '⚠ Error de conexión: ' + e.message + '. Reintentando en 60 s…';
-    document.getElementById('errBanner').style.display = 'block';
-    document.getElementById('syncTime').textContent = 'Error — ' + new Date().toLocaleTimeString('es-CO');
+    document.getElementById('errBanner').textContent='⚠ Error: '+e.message+'. Reintentando…';
+    document.getElementById('errBanner').style.display='block';
+    document.getElementById('syncTime').textContent='Error — '+new Date().toLocaleTimeString('es-CO');
   }
 }
 
+// ════════════════════════════════════════
+//  ARRANQUE
+// ════════════════════════════════════════
 initCharts();
 fetchData();
+fetchEnphase();
 setInterval(fetchData, REFRESH_MS);
-// Verificar offline cada minuto aunque no lleguen datos nuevos
-setInterval(() => { if (allRows.length) verificarOffline(allRows[allRows.length-1]); }, 60000);
+setInterval(fetchEnphase, REFRESH_MS);
+setInterval(()=>{ if(allRows.length) verificarOffline(allRows[allRows.length-1]); }, 60000);
 </script>
 </body>
 </html>
