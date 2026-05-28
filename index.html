@@ -294,8 +294,9 @@
       <thead><tr>
         <th>Timestamp</th><th>Irradiancia (W/m²)</th><th>T. Panel (°C)</th>
         <th>T. Ambiente (°C)</th><th>Humedad (%)</th>
+        <th>Potencia (W)</th><th>Energía Hoy (kWh)</th><th>Corriente (A)</th><th>Estado</th>
       </tr></thead>
-      <tbody id="tBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Cargando…</td></tr></tbody>
+      <tbody id="tBody"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem">Cargando…</td></tr></tbody>
     </table>
   </div>
 </main>
@@ -306,15 +307,11 @@
 //  CONFIGURACIÓN
 // ════════════════════════════════════════
 const CSV_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
-const COL         = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5 };
+const COL         = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5, potencia:6, energiaHoy:7, corriente:8, estado:9 };
 const REFRESH_MS  = 60000;
 const OFFLINE_MS  = 5 * 60 * 1000;
 
-// Enphase — leído desde Google Sheets (Apps Script lo actualiza cada hora)
-const ENPHASE_CSV = 'https://docs.google.com/spreadsheets/d/1T108yrDLp7hZwMmqHhdRKzZDJiY3ObRmZHmpc7koDMg/gviz/tq?tqx=out:csv&sheet=Enphase';
-const COL_ENP     = { timestamp:0, potencia:1, energiaHoy:2, energiaTotal:3, corriente:4, voltaje:5, estado:6, modulos:7 };
-
-// Parámetros del panel
+// Enphase — leído desde la misma hoja Datos (columnas G-J)
 const POTENCIA_NOMINAL_W  = 3262;
 const IRRADIANCIA_STC     = 1000;
 const EFICIENCIA_TEMP     = 0.004;
@@ -481,10 +478,14 @@ function parseCSV(text) {
     const tDHT  = parseFloat(clean[COL.tDHT]);
     return {
       ts, dt: parseTimestamp(ts),
-      irr : parseFloat(clean[COL.irr]) || 0,
-      tDS : (!isNaN(tDS)  && tDS  > -10 && tDS  < 100) ? tDS  : null,
-      tDHT: (!isNaN(tDHT) && tDHT > -10 && tDHT < 80)  ? tDHT : null,
-      hum : parseFloat(clean[COL.hum]) || 0
+      irr      : parseFloat(clean[COL.irr])       || 0,
+      tDS      : (!isNaN(tDS)  && tDS  > -10 && tDS  < 100) ? tDS  : null,
+      tDHT     : (!isNaN(tDHT) && tDHT > -10 && tDHT < 80)  ? tDHT : null,
+      hum      : parseFloat(clean[COL.hum])       || 0,
+      potencia : parseFloat(clean[COL.potencia])  || 0,
+      energiaHoy: parseFloat(clean[COL.energiaHoy]) || 0,
+      corriente: parseFloat(clean[COL.corriente]) || 0,
+      estado   : clean[COL.estado]                || '--'
     };
   }).filter(r => r.ts !== '--' && r.dt !== null);
 }
@@ -659,21 +660,26 @@ function render(rows) {
   verificarOffline(latest);
   const ultTDS  = [...rows].reverse().find(r=>r.tDS!==null);
   const ultTDHT = [...rows].reverse().find(r=>r.tDHT!==null);
+  const ultEnp  = [...rows].reverse().find(r=>r.potencia > 0) || latest;
+
   document.getElementById('v-irr').textContent  = Number(latest.irr).toFixed(1);
   document.getElementById('v-tds').textContent  = ultTDS  ? Number(ultTDS.tDS).toFixed(1)   : '--';
   document.getElementById('v-tdht').textContent = ultTDHT ? Number(ultTDHT.tDHT).toFixed(1) : '--';
   document.getElementById('v-hum').textContent  = Number(latest.hum).toFixed(1);
+
+  // Actualizar tarjetas Enphase desde el CSV
+  document.getElementById('v-power').textContent    = Number(latest.potencia).toLocaleString('es-CO');
+  document.getElementById('v-today').textContent    = Number(latest.energiaHoy).toFixed(3);
+  document.getElementById('v-corriente').textContent= Number(latest.corriente).toFixed(2);
+  document.getElementById('v-status').textContent   = latest.estado === 'normal' ? 'Normal ✓' : (latest.estado || '--');
+
   if(!document.body.classList.contains('dispositivo-offline')) setGauge(latest.hum);
   evalAlertas(latest);
+
+  // Calcular SOI con datos del CSV
+  if (latest.irr > 10) calcularSOI(latest.irr, ultTDS ? ultTDS.tDS : 25, latest.potencia);
+
   actualizarGraficas();
-  document.getElementById('tBody').innerHTML=[...rows].reverse().slice(0,10).map(r=>`
-    <tr>
-      <td style="color:var(--muted);font-size:.72rem">${r.ts}</td>
-      <td style="color:#f59e0b">${Number(r.irr).toFixed(2)}</td>
-      <td style="color:#ec4899">${r.tDS!==null?Number(r.tDS).toFixed(2):'<span style="color:#ef4444">error</span>'}</td>
-      <td style="color:#3b82f6">${r.tDHT!==null?Number(r.tDHT).toFixed(2):'<span style="color:#ef4444">error</span>'}</td>
-      <td style="color:#14b8a6">${Number(r.hum).toFixed(2)}</td>
-    </tr>`).join('');
   actualizarTabla();
   document.getElementById('syncTime').textContent='Sync: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   document.getElementById('errBanner').style.display='none';
@@ -701,7 +707,7 @@ async function fetchData() {
 // ════════════════════════════════════════
 function actualizarTabla() {
   if (!allRows.length) return;
-  const sel = document.getElementById('numRegistros').value;
+  const sel   = document.getElementById('numRegistros').value;
   const filas = sel === 'all' ? [...allRows].reverse() : [...allRows].reverse().slice(0, parseInt(sel));
   document.getElementById('tBody').innerHTML = filas.map(r => `
     <tr>
@@ -710,6 +716,10 @@ function actualizarTabla() {
       <td style="color:#ec4899">${r.tDS!==null ? Number(r.tDS).toFixed(2) : '<span style="color:#ef4444">error</span>'}</td>
       <td style="color:#3b82f6">${r.tDHT!==null ? Number(r.tDHT).toFixed(2) : '<span style="color:#ef4444">error</span>'}</td>
       <td style="color:#14b8a6">${Number(r.hum).toFixed(2)}</td>
+      <td style="color:#f97316">${Number(r.potencia).toFixed(0)}</td>
+      <td style="color:#a855f7">${Number(r.energiaHoy).toFixed(3)}</td>
+      <td style="color:#f59e0b">${Number(r.corriente).toFixed(2)}</td>
+      <td style="color:#22c55e;font-size:.68rem">${r.estado || '--'}</td>
     </tr>`).join('');
 }
 
@@ -724,9 +734,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function descargarCSV() {
   if (!allRows.length) { alert('No hay datos para descargar.'); return; }
 
-  const encabezado = 'Timestamp,Irradiancia (W/m2),T. Panel (°C),T. Ambiente (°C),Humedad (%)';
+  const encabezado = 'Timestamp,Irradiancia (W/m2),T. Panel (°C),T. Ambiente (°C),Humedad (%),Potencia (W),Energia Hoy (kWh),Corriente AC (A),Estado';
   const filas = allRows.map(r =>
-    `"${r.ts}",${r.irr.toFixed(2)},${r.tDS !== null ? r.tDS.toFixed(2) : 'error'},${r.tDHT !== null ? r.tDHT.toFixed(2) : 'error'},${r.hum.toFixed(2)}`
+    `"${r.ts}",${r.irr.toFixed(2)},${r.tDS!==null?r.tDS.toFixed(2):'error'},${r.tDHT!==null?r.tDHT.toFixed(2):'error'},${r.hum.toFixed(2)},${r.potencia.toFixed(0)},${r.energiaHoy.toFixed(3)},${r.corriente.toFixed(2)},${r.estado}`
   );
 
   const csvContent = [encabezado, ...filas].join('\n');
