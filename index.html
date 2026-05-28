@@ -275,8 +275,21 @@
     </div>
   </div>
 
-  <p class="section-label" style="margin-top:2rem">Últimas 10 lecturas</p>
-  <div class="table-card">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-top:2rem; flex-wrap:wrap; gap:10px;">
+    <p class="section-label" style="margin:0">Últimas lecturas</p>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <select id="numRegistros" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:.72rem;font-family:'DM Sans',sans-serif;cursor:pointer;">
+        <option value="10">Últimas 10</option>
+        <option value="50">Últimas 50</option>
+        <option value="100">Últimas 100</option>
+        <option value="all">Todas</option>
+      </select>
+      <button onclick="descargarCSV()" style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#4ade80;border-radius:8px;padding:5px 14px;font-size:.72rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:all .15s;">
+        ⬇ Descargar CSV
+      </button>
+    </div>
+  </div>
+  <div class="table-card" style="margin-top:.75rem;">
     <table>
       <thead><tr>
         <th>Timestamp</th><th>Irradiancia (W/m²)</th><th>T. Panel (°C)</th>
@@ -297,17 +310,14 @@ const COL         = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5 };
 const REFRESH_MS  = 60000;
 const OFFLINE_MS  = 5 * 60 * 1000;
 
-// Enphase
-const ENPHASE_API_KEY     = '13eda577f6eec19221322ec847499e0e';
-const ENPHASE_CLIENT_ID   = '132a3b7b79591d365b99db31e8a75b59';
-const ENPHASE_CLIENT_SECRET = 'e25fe2f3be2966698a8d79a34a620074';
-const ENPHASE_SYSTEM_ID   = '3293181';
-const ENPHASE_REFRESH_TOKEN = 'eyJhbGciOiJSUzI1NiJ9.eyJhcHBfdHlwZSI6InN5c3RlbSIsInVzZXJfaWQiOiIyOTM0Nzk0IiwiZW5sX3VpZCI6IjI5MzQ3OTQiLCJlbWFpbCI6ImxhZ29zbHVpczM2NkBnbWFpbC5jb20iLCJlbmxfY2lkIjoiIiwiZW5sX3Bhc3N3b3JkX2xhc3RfY2hhbmdlZCI6IjE2NTcyMjM3NTgiLCJzY29wZSI6InJlYWQgd3JpdGUiLCJpc3MiOiJFbnBoYXNlIiwiaWF0IjoxNzQ4MzYzODQ5LCJleHAiOjE3NzkwMTM4NDl9.RQnp0jWwh-gEVJL0gOD7FLvsdpI5qmQGuO9cQ0Xhp_XtwTwhZGD5EOUzmmT2wS6b5LLv-EgxDBCSpkyH2OM-lDuFL_xRgNaXBinNT37eOsWsTZiVD-wmjOpcZqsJG4UvVpkvXpejoTWPhzx78F-8F3iYcf8uP7f9ny2tzqxEXdM';
+// Enphase — leído desde Google Sheets (Apps Script lo actualiza cada hora)
+const ENPHASE_CSV = 'https://docs.google.com/spreadsheets/d/1T108yrDLp7hZwMmqHhdRKzZDJiY3ObRmZHmpc7koDMg/gviz/tq?tqx=out:csv&sheet=Enphase';
+const COL_ENP     = { timestamp:0, potencia:1, energiaHoy:2, energiaTotal:3, corriente:4, voltaje:5, estado:6, modulos:7 };
 
-// Parámetros del panel (Enphase IQ7+ con panel típico 360W)
-const POTENCIA_NOMINAL_W  = 3262;  // W pico total del sistema (size_w de la API)
-const IRRADIANCIA_STC     = 1000;  // W/m² condiciones estándar
-const EFICIENCIA_TEMP     = 0.004; // 0.4% pérdida por °C sobre 25°C
+// Parámetros del panel
+const POTENCIA_NOMINAL_W  = 3262;
+const IRRADIANCIA_STC     = 1000;
+const EFICIENCIA_TEMP     = 0.004;
 const TEMP_REF            = 25;    // °C temperatura de referencia STC
 const SOI_UMBRAL_WARN     = 5;     // % alerta amarilla
 const SOI_UMBRAL_ERROR    = 10;    // % alerta roja
@@ -315,49 +325,36 @@ const SOI_UMBRAL_ERROR    = 10;    // % alerta roja
 let filtroIrr  = '1d';
 let filtroTemp = '1d';
 let allRows    = [];
-let enphaseToken = null;
 let powerHistory = [];
 
 // ════════════════════════════════════════
-//  ENPHASE API
+//  ENPHASE — leer desde Google Sheets
 // ════════════════════════════════════════
-async function refreshEnphaseToken() {
-  try {
-    const credentials = btoa(ENPHASE_CLIENT_ID + ':' + ENPHASE_CLIENT_SECRET);
-    const res = await fetch(
-      `https://api.enphaseenergy.com/oauth/token?grant_type=refresh_token&refresh_token=${ENPHASE_REFRESH_TOKEN}`,
-      { method:'POST', headers:{ Authorization:'Basic ' + credentials } }
-    );
-    if (!res.ok) throw new Error('Token refresh failed');
-    const data = await res.json();
-    enphaseToken = data.access_token;
-    return true;
-  } catch(e) {
-    console.warn('Enphase token refresh error:', e.message);
-    return false;
-  }
-}
-
 async function fetchEnphase() {
-  if (!enphaseToken) {
-    const ok = await refreshEnphaseToken();
-    if (!ok) return;
-  }
   try {
-    const res = await fetch(
-      `https://api.enphaseenergy.com/api/v4/systems/${ENPHASE_SYSTEM_ID}/summary?key=${ENPHASE_API_KEY}`,
-      { headers:{ Authorization:'Bearer ' + enphaseToken } }
-    );
-    if (res.status === 401) {
-      enphaseToken = null;
-      await refreshEnphaseToken();
-      return fetchEnphase();
-    }
-    if (!res.ok) throw new Error('Enphase API error ' + res.status);
-    const data = await res.json();
+    const res  = await fetch(ENPHASE_CSV + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return;
+
+    // Tomar la última fila (dato más reciente)
+    const cols   = lines[lines.length - 1].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || lines[lines.length - 1].split(',');
+    const clean  = cols.map(c => c.replace(/^"|"$/g,'').trim());
+
+    const data = {
+      current_power   : parseFloat(clean[COL_ENP.potencia])    || 0,
+      energy_today    : parseFloat(clean[COL_ENP.energiaHoy])  * 1000 || 0,
+      energy_lifetime : parseFloat(clean[COL_ENP.energiaTotal])* 1000000 || 0,
+      corriente_ac    : parseFloat(clean[COL_ENP.corriente])   || 0,
+      voltaje_ca      : parseFloat(clean[COL_ENP.voltaje])     || 218.8,
+      status          : clean[COL_ENP.estado] || '--',
+      modules         : parseInt(clean[COL_ENP.modulos])       || 9
+    };
+
     renderEnphase(data);
   } catch(e) {
-    console.warn('Enphase fetch error:', e.message);
+    console.warn('Enphase Sheets fetch error:', e.message);
   }
 }
 
@@ -441,6 +438,13 @@ function calcularSOI(irradiancia, tempPanel, potenciaReal) {
     titulo.textContent = `⚠ Limpieza necesaria — Pérdida estimada: ${soi.toFixed(1)}%`;
     desc.textContent   = `El panel está perdiendo ${perdida.toFixed(0)} W. La suciedad supera el umbral crítico del ${SOI_UMBRAL_ERROR}%. Se requiere limpieza inmediata.`;
     barraEl.style.background = '#ef4444';
+
+    // Enviar alerta por correo una sola vez
+    enviarAlertaCorreo(
+      'soi-critico',
+      `Panel sucio — Limpieza requerida (SOI: ${soi.toFixed(1)}%)`,
+      `Pérdida de ${perdida.toFixed(0)} W respecto a potencia esperada de ${potEsperada.toFixed(0)} W con irradiancia de ${irradiancia.toFixed(0)} W/m².`
+    );
 
     // Agregar alerta en el panel de alertas
     const wrap = document.getElementById('alertas-wrap');
@@ -613,6 +617,8 @@ function evalAlertas(latest) {
   const alertasHtml = REGLAS.map(regla => {
     const res=regla.check(latest); if(!res) return '';
     const card=document.getElementById(regla.card); if(card) card.classList.add(res.tipo==='error'?'alerta-activa':'warn-activa');
+    // Enviar correo solo una vez por alerta
+    enviarAlertaCorreo(regla.id, res.titulo, res.desc);
     return `<div class="alerta ${res.tipo}"><span class="alerta-icono">${res.tipo==='error'?'⛔':'⚠️'}</span><div class="alerta-body"><div class="alerta-titulo">${res.titulo}</div><div class="alerta-desc">${res.desc}</div><div class="alerta-hora">Detectado a las ${ahora}</div></div></div>`;
   }).join('');
   const soiAlerta = document.getElementById('alerta-soi');
@@ -668,6 +674,7 @@ function render(rows) {
       <td style="color:#3b82f6">${r.tDHT!==null?Number(r.tDHT).toFixed(2):'<span style="color:#ef4444">error</span>'}</td>
       <td style="color:#14b8a6">${Number(r.hum).toFixed(2)}</td>
     </tr>`).join('');
+  actualizarTabla();
   document.getElementById('syncTime').textContent='Sync: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   document.getElementById('errBanner').style.display='none';
 }
@@ -686,6 +693,77 @@ async function fetchData() {
     document.getElementById('errBanner').textContent='⚠ Error: '+e.message+'. Reintentando…';
     document.getElementById('errBanner').style.display='block';
     document.getElementById('syncTime').textContent='Error — '+new Date().toLocaleTimeString('es-CO');
+  }
+}
+
+// ════════════════════════════════════════
+//  TABLA DINÁMICA CON SELECTOR
+// ════════════════════════════════════════
+function actualizarTabla() {
+  if (!allRows.length) return;
+  const sel = document.getElementById('numRegistros').value;
+  const filas = sel === 'all' ? [...allRows].reverse() : [...allRows].reverse().slice(0, parseInt(sel));
+  document.getElementById('tBody').innerHTML = filas.map(r => `
+    <tr>
+      <td style="color:var(--muted);font-size:.72rem">${r.ts}</td>
+      <td style="color:#f59e0b">${Number(r.irr).toFixed(2)}</td>
+      <td style="color:#ec4899">${r.tDS!==null ? Number(r.tDS).toFixed(2) : '<span style="color:#ef4444">error</span>'}</td>
+      <td style="color:#3b82f6">${r.tDHT!==null ? Number(r.tDHT).toFixed(2) : '<span style="color:#ef4444">error</span>'}</td>
+      <td style="color:#14b8a6">${Number(r.hum).toFixed(2)}</td>
+    </tr>`).join('');
+}
+
+// Actualizar tabla cuando cambia el selector
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('numRegistros').addEventListener('change', actualizarTabla);
+});
+
+// ════════════════════════════════════════
+//  DESCARGA CSV
+// ════════════════════════════════════════
+function descargarCSV() {
+  if (!allRows.length) { alert('No hay datos para descargar.'); return; }
+
+  const encabezado = 'Timestamp,Irradiancia (W/m2),T. Panel (°C),T. Ambiente (°C),Humedad (%)';
+  const filas = allRows.map(r =>
+    `"${r.ts}",${r.irr.toFixed(2)},${r.tDS !== null ? r.tDS.toFixed(2) : 'error'},${r.tDHT !== null ? r.tDHT.toFixed(2) : 'error'},${r.hum.toFixed(2)}`
+  );
+
+  const csvContent = [encabezado, ...filas].join('\n');
+  const blob       = new Blob([csvContent], { type:'text/csv;charset=utf-8;' });
+  const url        = URL.createObjectURL(blob);
+  const link       = document.createElement('a');
+  const fecha      = new Date().toISOString().slice(0,10);
+
+  link.href     = url;
+  link.download = `estacion_solar_UAC_${fecha}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════
+//  ALERTAS POR CORREO (una sola vez)
+//  Usa el Apps Script como intermediario
+// ════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykUHDwBFkVF7VXvW-o7pjWbm6kcuDA-Y8TPMUMJx6NbREzzeKExEMN7VxcnJNr8ip-Aw/exec';
+const alertasEnviadas = new Set(); // guarda qué alertas ya se enviaron en esta sesión
+
+async function enviarAlertaCorreo(id, titulo, desc) {
+  if (alertasEnviadas.has(id)) return; // ya se envió, no repetir
+  alertasEnviadas.add(id);
+
+  try {
+    const params = new URLSearchParams({
+      accion       : 'alerta',
+      alerta_id    : id,
+      alerta_titulo: titulo,
+      alerta_desc  : desc,
+      timestamp    : new Date().toLocaleString('es-CO')
+    });
+    await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
+    console.log(`Alerta enviada por correo: ${id}`);
+  } catch(e) {
+    console.warn('Error enviando alerta por correo:', e.message);
   }
 }
 
