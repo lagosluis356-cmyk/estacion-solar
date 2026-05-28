@@ -309,7 +309,7 @@
 const CSV_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
 const COL         = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5, potencia:6, energiaHoy:7, corriente:8, estado:9 };
 const REFRESH_MS  = 60000;
-const OFFLINE_MS  = 5 * 60 * 1000;
+const OFFLINE_MS  = 10 * 60 * 1000;  // 10 minutos sin datos = offline
 
 // Enphase — leído desde la misma hoja Datos (columnas G-J)
 const POTENCIA_NOMINAL_W  = 3262;
@@ -676,8 +676,20 @@ function render(rows) {
   if(!document.body.classList.contains('dispositivo-offline')) setGauge(latest.hum);
   evalAlertas(latest);
 
-  // Calcular SOI con datos del CSV
-  if (latest.irr > 10) calcularSOI(latest.irr, ultTDS ? ultTDS.tDS : 25, latest.potencia);
+  // Calcular SOI con datos del CSV — solo de día con irradiancia significativa
+  const horaActual = new Date().getHours() * 60 + new Date().getMinutes();
+  const esDeDia    = horaActual >= 360 && horaActual < 1110; // 6am a 6:30pm
+  if (latest.irr > 50 && esDeDia) {
+    calcularSOI(latest.irr, ultTDS ? ultTDS.tDS : 25, latest.potencia);
+  } else {
+    // Limpiar SOI fuera de horario
+    document.getElementById('soi-titulo').textContent = esDeDia ? 'Irradiancia insuficiente para calcular SOI' : 'Horario nocturno — SOI no disponible';
+    document.getElementById('soi-desc').textContent   = esDeDia ? 'Se requiere irradiancia > 50 W/m² para un cálculo confiable.' : 'El cálculo del Soiling Index requiere radiación solar directa.';
+    document.getElementById('soi-semaforo').className = 'semaforo verde';
+    document.getElementById('soi-semaforo').children[0].textContent = '🌙';
+    document.getElementById('soi-valor').textContent   = 'N/A';
+    document.getElementById('soi-barra').style.width   = '0%';
+  }
 
   actualizarGraficas();
   actualizarTabla();
@@ -734,16 +746,32 @@ document.addEventListener('DOMContentLoaded', () => {
 function descargarCSV() {
   if (!allRows.length) { alert('No hay datos para descargar.'); return; }
 
-  const encabezado = 'Timestamp,Irradiancia (W/m2),T. Panel (°C),T. Ambiente (°C),Humedad (%),Potencia (W),Energia Hoy (kWh),Corriente AC (A),Estado';
-  const filas = allRows.map(r =>
-    `"${r.ts}",${r.irr.toFixed(2)},${r.tDS!==null?r.tDS.toFixed(2):'error'},${r.tDHT!==null?r.tDHT.toFixed(2):'error'},${r.hum.toFixed(2)},${r.potencia.toFixed(0)},${r.energiaHoy.toFixed(3)},${r.corriente.toFixed(2)},${r.estado}`
-  );
+  // Usar punto y coma como separador — Excel en español lo reconoce automáticamente
+  const sep = ';';
+  const encabezado = [
+    'Timestamp','Irradiancia (W/m2)','T. Panel (°C)','T. Ambiente (°C)',
+    'Humedad (%)','Potencia (W)','Energia Hoy (kWh)','Corriente AC (A)','Estado'
+  ].join(sep);
 
-  const csvContent = [encabezado, ...filas].join('\n');
-  const blob       = new Blob([csvContent], { type:'text/csv;charset=utf-8;' });
-  const url        = URL.createObjectURL(blob);
-  const link       = document.createElement('a');
-  const fecha      = new Date().toISOString().slice(0,10);
+  const filas = allRows.map(r => [
+    `"${r.ts}"`,
+    r.irr.toFixed(2),
+    r.tDS  !== null ? r.tDS.toFixed(2)  : 'error',
+    r.tDHT !== null ? r.tDHT.toFixed(2) : 'error',
+    r.hum.toFixed(2),
+    r.potencia.toFixed(0),
+    r.energiaHoy.toFixed(3),
+    r.corriente.toFixed(2),
+    r.estado || '--'
+  ].join(sep));
+
+  // BOM para que Excel reconozca tildes y caracteres especiales
+  const BOM          = '\uFEFF';
+  const csvContent   = BOM + [encabezado, ...filas].join('\n');
+  const blob         = new Blob([csvContent], { type:'text/csv;charset=utf-8;' });
+  const url          = URL.createObjectURL(blob);
+  const link         = document.createElement('a');
+  const fecha        = new Date().toISOString().slice(0,10);
 
   link.href     = url;
   link.download = `estacion_solar_UAC_${fecha}.csv`;
