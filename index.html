@@ -130,6 +130,7 @@
   #alertas-wrap { display:flex; flex-direction:column; gap:8px; margin-bottom:1.25rem; }
   .alerta { display:flex; align-items:flex-start; gap:10px; padding:.75rem 1rem; border-radius:10px; font-size:.8rem; animation:fadeIn .3s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   .alerta.warn  { background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25); color:#fcd34d; }
   .alerta.error { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.25);  color:#fca5a5; }
   .alerta-icono { font-size:1rem; flex-shrink:0; margin-top:1px; }
@@ -305,27 +306,80 @@
     </div>
   </div>
 
-  <p class="section-label">Índice de suciedad del panel — Soiling Index (SOI)</p>
-  <div class="soi-card" id="soi-card">
+  <p class="section-label">Diagnóstico inteligente del sistema — IA</p>
+  <div class="soi-card" id="ai-panel" style="border-color:rgba(99,102,241,.25)">
+    <!-- HEADER -->
     <div class="soi-header">
-      <h2>Estado de limpieza del generador fotovoltaico</h2>
-      <span style="font-size:.72rem;color:var(--muted);font-family:'Space Mono',monospace" id="soi-hora">--</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🤖</div>
+        <div>
+          <h2 style="color:#a5b4fc;font-size:.8rem;letter-spacing:.05em">ANÁLISIS IA — Estación Solar UAC</h2>
+          <div style="font-size:.65rem;color:var(--muted);margin-top:2px">Modelo: Claude Sonnet · Ventana: últimas 60 lecturas (~1 hora)</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace" id="ai-hora">--</span>
+        <button id="ai-btn" onclick="ejecutarDiagnostico()" style="display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(139,92,246,.2));border:1px solid rgba(99,102,241,.4);color:#a5b4fc;border-radius:8px;padding:7px 16px;font-size:.72rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.04em">
+          <span id="ai-btn-ico">✦</span> Analizar ahora
+        </button>
+      </div>
     </div>
-    <div class="soi-grid">
-      <div class="soi-metric"><div class="label">Potencia real</div><div class="val" id="soi-real" style="color:#f97316">-- W</div></div>
-      <div class="soi-metric"><div class="label">Potencia esperada (panel limpio)</div><div class="val" id="soi-esp" style="color:#22c55e">-- W</div></div>
-      <div class="soi-metric"><div class="label">Pérdida estimada</div><div class="val" id="soi-perdida" style="color:#f59e0b">-- W</div></div>
-      <div class="soi-metric"><div class="label">Soiling Index</div><div class="val" id="soi-valor" style="color:#f59e0b">--%</div></div>
+
+    <!-- MÉTRICAS RESUMEN que el modelo recibirá -->
+    <div class="soi-grid" id="ai-metrics-grid" style="margin-bottom:1rem">
+      <div class="soi-metric">
+        <div class="label">Irradiancia media</div>
+        <div class="val" id="ai-irr-avg" style="color:#f59e0b">-- W/m²</div>
+      </div>
+      <div class="soi-metric">
+        <div class="label">Potencia media</div>
+        <div class="val" id="ai-pow-avg" style="color:#f97316">-- W</div>
+      </div>
+      <div class="soi-metric">
+        <div class="label">Eficiencia media</div>
+        <div class="val" id="ai-eff" style="color:#a5b4fc">-- %</div>
+      </div>
+      <div class="soi-metric">
+        <div class="label">Tendencia potencia</div>
+        <div class="val" id="ai-trend" style="color:#22c55e">--</div>
+      </div>
     </div>
-    <div class="soi-barra-wrap">
-      <div class="soi-barra-label"><span>Limpio (0%)</span><span>Limpiar (5%)</span><span>Crítico (10%+)</span></div>
-      <div class="soi-barra-bg"><div class="soi-barra-fill" id="soi-barra" style="width:0%;background:#22c55e"></div></div>
-    </div>
-    <div class="semaforo verde" id="soi-semaforo" style="margin-top:1rem">
-      <span class="semaforo-icono">🟢</span>
-      <div>
-        <div style="font-weight:600" id="soi-titulo">Esperando datos...</div>
-        <div style="font-size:.75rem;opacity:.8;margin-top:2px" id="soi-desc">Calculando Soiling Index con datos en tiempo real</div>
+
+    <!-- RESULTADO IA -->
+    <div id="ai-result-wrap">
+      <!-- Estado inicial -->
+      <div id="ai-idle" style="display:flex;align-items:center;gap:14px;padding:1.1rem 1.25rem;border-radius:10px;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15)">
+        <div style="font-size:1.8rem">🔍</div>
+        <div>
+          <div style="font-weight:600;color:#a5b4fc;font-size:.85rem">Diagnóstico no ejecutado aún</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:3px">Presiona "Analizar ahora" para que la IA evalúe el comportamiento del sistema en la última hora y determine si hay suciedad, fallo, degradación u operación normal.</div>
+        </div>
+      </div>
+      <!-- Loading -->
+      <div id="ai-loading" style="display:none;align-items:center;gap:14px;padding:1.1rem 1.25rem;border-radius:10px;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.2)">
+        <div style="font-size:1.8rem;animation:spin 1.5s linear infinite">⚙️</div>
+        <div>
+          <div style="font-weight:600;color:#a5b4fc;font-size:.85rem">Analizando datos del sistema...</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:3px" id="ai-loading-msg">Procesando últimas 60 lecturas con modelo IA</div>
+        </div>
+      </div>
+      <!-- Resultado -->
+      <div id="ai-output" style="display:none">
+        <div id="ai-semaforo" class="semaforo verde" style="margin-bottom:.9rem">
+          <span id="ai-sem-ico" style="font-size:1.4rem">🟢</span>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:.88rem" id="ai-titulo">--</div>
+            <div style="font-size:.72rem;opacity:.8;margin-top:3px" id="ai-subtitulo">--</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700" id="ai-score-display">--</div>
+        </div>
+        <div id="ai-diagnostico" style="font-size:.82rem;line-height:1.7;color:#cbd5e1;background:rgba(255,255,255,.03);border-radius:10px;padding:1rem 1.25rem;border:1px solid var(--border);white-space:pre-wrap"></div>
+        <div style="margin-top:.75rem;display:flex;gap:8px;flex-wrap:wrap" id="ai-tags"></div>
+      </div>
+      <!-- Error -->
+      <div id="ai-error" style="display:none;align-items:center;gap:12px;padding:1rem 1.25rem;border-radius:10px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);color:#fca5a5;font-size:.8rem">
+        <span style="font-size:1.4rem">⛔</span>
+        <div id="ai-error-msg">Error al conectar con el modelo IA.</div>
       </div>
     </div>
   </div>
@@ -453,58 +507,262 @@ function updateHeaderStats(latest) {
   document.getElementById('hs-temp').textContent  = ultTDS ? Number(ultTDS.tDS).toFixed(1) : '--';
 }
 
-// SOI
-function calcularSOI(irradiancia, tempPanel, potenciaReal) {
-  const factorIrr   = irradiancia / IRRADIANCIA_STC;
-  const deltaTemp   = isNaN(tempPanel) ? 0 : (tempPanel - TEMP_REF) * EFICIENCIA_TEMP;
-  const potEsperada = POTENCIA_NOMINAL_W * factorIrr * (1 - deltaTemp);
-  if (potEsperada <= 0) return;
-  const soi     = Math.max(0, (1 - potenciaReal / potEsperada) * 100);
-  const perdida = Math.max(0, potEsperada - potenciaReal);
-  const ahora   = new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'});
+// IA DIAGNÓSTICO
+// ════════════════════════════════════════════════════════
+const POTENCIA_NOMINAL_W = 3262;
+const IRRADIANCIA_STC    = 1000;
+const EFICIENCIA_TEMP    = 0.004;
+const TEMP_REF           = 25;
 
-  document.getElementById('soi-real').textContent    = potenciaReal.toFixed(0) + ' W';
-  document.getElementById('soi-esp').textContent     = potEsperada.toFixed(0) + ' W';
-  document.getElementById('soi-perdida').textContent = perdida.toFixed(0) + ' W';
-  document.getElementById('soi-valor').textContent   = soi.toFixed(1) + '%';
-  document.getElementById('soi-hora').textContent    = 'Calculado a las ' + ahora;
+let ultimoDiagnostico = null;
 
-  const pct = Math.min(soi, 15);
-  const barraEl = document.getElementById('soi-barra');
-  barraEl.style.width = (pct / 15 * 100) + '%';
+function calcularMetricas(rows60) {
+  // Filtrar filas con irradiancia > 10 (horas de sol)
+  const valid = rows60.filter(r => r.irr > 10 && r.potencia >= 0);
+  if (!valid.length) return null;
 
-  const soiEl = document.getElementById('hs-soi');
-  soiEl.textContent = soi.toFixed(1);
-  soiEl.style.color = soi < SOI_UMBRAL_WARN ? '#22c55e' : soi < SOI_UMBRAL_ERROR ? '#eab308' : '#ef4444';
+  const avgIrr = valid.reduce((s,r) => s + r.irr, 0) / valid.length;
+  const avgPow = valid.reduce((s,r) => s + r.potencia, 0) / valid.length;
+  const avgTDS = valid.filter(r=>r.tDS!==null).reduce((s,r)=>s+r.tDS,0) / (valid.filter(r=>r.tDS!==null).length||1);
+  const avgTDHT= valid.filter(r=>r.tDHT!==null).reduce((s,r)=>s+r.tDHT,0)/(valid.filter(r=>r.tDHT!==null).length||1);
+  const avgHum = valid.reduce((s,r)=>s+r.hum,0)/valid.length;
 
-  const sem = document.getElementById('soi-semaforo');
-  const titulo = document.getElementById('soi-titulo');
-  const desc   = document.getElementById('soi-desc');
+  // Potencia esperada promedio (modelo físico)
+  const potEsperadas = valid.map(r => {
+    const f = r.irr / IRRADIANCIA_STC;
+    const tPanel = r.tDS !== null ? r.tDS : avgTDHT + 20;
+    const dT = (tPanel - TEMP_REF) * EFICIENCIA_TEMP;
+    return POTENCIA_NOMINAL_W * f * (1 - dT);
+  });
+  const avgPotEsp = potEsperadas.reduce((s,v)=>s+v,0)/potEsperadas.length;
 
-  if (soi < SOI_UMBRAL_WARN) {
-    sem.className = 'semaforo verde'; sem.children[0].textContent = '🟢';
-    titulo.textContent = `Panel limpio — Pérdida estimada: ${soi.toFixed(1)}%`;
-    desc.textContent   = 'El sistema opera dentro del rango esperado. No se requiere limpieza.';
-    barraEl.style.background = '#22c55e';
-  } else if (soi < SOI_UMBRAL_ERROR) {
-    sem.className = 'semaforo amarillo'; sem.children[0].textContent = '🟡';
-    titulo.textContent = `Suciedad leve detectada — Pérdida estimada: ${soi.toFixed(1)}%`;
-    desc.textContent   = `Pérdida de ${perdida.toFixed(0)} W respecto a lo esperado. Se recomienda programar limpieza.`;
-    barraEl.style.background = '#eab308';
-  } else {
-    sem.className = 'semaforo rojo'; sem.children[0].textContent = '🔴';
-    titulo.textContent = `⚠ Limpieza necesaria — Pérdida estimada: ${soi.toFixed(1)}%`;
-    desc.textContent   = `Pérdida de ${perdida.toFixed(0)} W. Suciedad supera el umbral crítico del ${SOI_UMBRAL_ERROR}%. Se requiere limpieza inmediata.`;
-    barraEl.style.background = '#ef4444';
-    enviarAlertaCorreo('soi-critico', `Panel sucio — SOI: ${soi.toFixed(1)}%`, `Pérdida de ${perdida.toFixed(0)} W con irradiancia ${irradiancia.toFixed(0)} W/m².`);
+  // Eficiencia relativa
+  const eficiencia = avgPotEsp > 0 ? (avgPow / avgPotEsp * 100) : null;
+
+  // Tendencia: comparar primera mitad vs segunda mitad
+  const mid = Math.floor(valid.length / 2);
+  const powFirst = valid.slice(0,mid).reduce((s,r)=>s+r.potencia,0)/mid;
+  const powLast  = valid.slice(mid).reduce((s,r)=>s+r.potencia,0)/(valid.length-mid);
+  const tendenciaPct = powFirst > 0 ? ((powLast-powFirst)/powFirst*100) : 0;
+  let tendencia = tendenciaPct > 3 ? '↑ Subiendo' : tendenciaPct < -3 ? '↓ Bajando' : '→ Estable';
+
+  // SOI puntual última lectura
+  const ultima = valid[valid.length-1];
+  const fUlt   = ultima.irr / IRRADIANCIA_STC;
+  const tPanelUlt = ultima.tDS !== null ? ultima.tDS : avgTDHT+20;
+  const potEspUlt = POTENCIA_NOMINAL_W * fUlt * (1-(tPanelUlt-TEMP_REF)*EFICIENCIA_TEMP);
+  const soiUlt    = potEspUlt > 0 ? Math.max(0,(1-ultima.potencia/potEspUlt)*100) : 0;
+
+  return { avgIrr, avgPow, avgPotEsp, avgTDS, avgTDHT, avgHum,
+           eficiencia, tendencia, tendenciaPct, soiUlt,
+           n: valid.length, rows: valid };
+}
+
+function actualizarMetricasUI(m) {
+  if (!m) return;
+  document.getElementById('ai-irr-avg').textContent  = m.avgIrr.toFixed(1) + ' W/m²';
+  document.getElementById('ai-pow-avg').textContent  = m.avgPow.toFixed(0) + ' W';
+  document.getElementById('ai-eff').textContent      = m.eficiencia !== null ? m.eficiencia.toFixed(1) + ' %' : '-- %';
+  document.getElementById('ai-trend').textContent    = m.tendencia;
+  const trendEl = document.getElementById('ai-trend');
+  trendEl.style.color = m.tendenciaPct > 3 ? '#22c55e' : m.tendenciaPct < -3 ? '#ef4444' : '#94a3b8';
+}
+
+async function ejecutarDiagnostico() {
+  if (!allRows.length) { alert('No hay datos cargados aún.'); return; }
+
+  const rows60 = allRows.slice(-60);
+  const m = calcularMetricas(rows60);
+  if (!m) {
+    mostrarErrorIA('Sin irradiancia suficiente para analizar (¿es de noche?)');
+    return;
+  }
+
+  actualizarMetricasUI(m);
+
+  // UI loading
+  const btn = document.getElementById('ai-btn');
+  btn.disabled = true;
+  btn.style.opacity = '.5';
+  document.getElementById('ai-idle').style.display    = 'none';
+  document.getElementById('ai-output').style.display  = 'none';
+  document.getElementById('ai-error').style.display   = 'none';
+  document.getElementById('ai-loading').style.display = 'flex';
+
+  const loadingMsgs = [
+    'Procesando últimas ' + m.n + ' lecturas válidas...',
+    'Evaluando eficiencia relativa del sistema...',
+    'Comparando con modelo de referencia físico...',
+    'Generando diagnóstico en lenguaje natural...'
+  ];
+  let msgIdx = 0;
+  const msgInterval = setInterval(() => {
+    msgIdx = (msgIdx+1) % loadingMsgs.length;
+    const el = document.getElementById('ai-loading-msg');
+    if (el) el.textContent = loadingMsgs[msgIdx];
+  }, 1800);
+
+  // Preparar datos para el prompt
+  const hora = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+  const fecha = new Date().toLocaleDateString('es-CO');
+
+  // Muestra cada 5 lecturas para no sobrecargar el prompt
+  const muestraRows = m.rows.filter((_,i) => i % 5 === 0).slice(-12);
+  const tablaCSV = muestraRows.map(r =>
+    `${r.ts},${r.irr.toFixed(1)},${r.potencia.toFixed(0)},${r.tDS!==null?r.tDS.toFixed(1):'N/A'},${r.tDHT!==null?r.tDHT.toFixed(1):'N/A'},${r.hum.toFixed(1)}`
+  ).join('
+');
+
+  const prompt = `Eres un experto en sistemas fotovoltaicos analizando una estación solar de la Universidad Autónoma del Caribe (Barranquilla, Colombia). El sistema tiene 9 microinversores Enphase IQ7+ con potencia nominal de 3262W.
+
+DATOS RESUMEN DE LA ÚLTIMA HORA (${m.n} lecturas):
+- Irradiancia promedio: ${m.avgIrr.toFixed(1)} W/m²
+- Potencia real promedio: ${m.avgPow.toFixed(0)} W
+- Potencia esperada (modelo físico): ${m.avgPotEsp.toFixed(0)} W
+- Eficiencia relativa: ${m.eficiencia !== null ? m.eficiencia.toFixed(1)+'%' : 'N/D'}
+- SOI puntual (última lectura): ${m.soiUlt.toFixed(1)}%
+- Temperatura panel promedio: ${m.avgTDS.toFixed(1)}°C
+- Temperatura ambiente promedio: ${m.avgTDHT.toFixed(1)}°C
+- Humedad relativa promedio: ${m.avgHum.toFixed(1)}%
+- Tendencia de potencia: ${m.tendencia} (${m.tendenciaPct.toFixed(1)}%)
+- Fecha y hora análisis: ${fecha} ${hora}
+
+MUESTRA DE LECTURAS RECIENTES (timestamp, irr W/m², potencia W, T.panel °C, T.ambiente °C, humedad %):
+${tablaCSV}
+
+Analiza estos datos y responde en español con el siguiente formato EXACTO (respeta las etiquetas):
+
+ESTADO: [NORMAL | ALERTA_LEVE | ALERTA_CRITICA | FALLO]
+CAUSA: [una línea corta: suciedad / degradación / fallo inversor / condición climática / normal]
+CONFIANZA: [ALTA | MEDIA | BAJA]
+
+DIAGNÓSTICO:
+[3 a 5 oraciones explicando qué está pasando, por qué lo concluyes con los datos, y si el SOI es confiable o puede estar siendo afectado por condiciones climáticas. Usa lenguaje técnico pero claro.]
+
+RECOMENDACIÓN:
+[1 a 3 acciones concretas según el estado detectado]`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    clearInterval(msgInterval);
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message || 'HTTP ' + resp.status);
+    }
+
+    const data = await resp.json();
+    const texto = data.content.map(b => b.type === 'text' ? b.text : '').join('').trim();
+
+    // Parsear campos estructurados
+    const getField = (key) => {
+      const m = texto.match(new RegExp(key + ':\s*([^\n]+)'));
+      return m ? m[1].trim() : null;
+    };
+    const estado      = getField('ESTADO')     || 'NORMAL';
+    const causa       = getField('CAUSA')      || '--';
+    const confianza   = getField('CONFIANZA')  || 'MEDIA';
+
+    // Extraer bloques de texto
+    const diagMatch  = texto.match(/DIAGNÓSTICO:
+([\s\S]*?)(?=
+RECOMENDACIÓN:|
+
+|$)/);
+    const recMatch   = texto.match(/RECOMENDACIÓN:
+([\s\S]*?)$/);
+    const diagnostico   = diagMatch ? diagMatch[1].trim() : texto;
+    const recomendacion = recMatch  ? recMatch[1].trim()  : '';
+
+    // Render resultado
+    mostrarResultadoIA(estado, causa, confianza, diagnostico, recomendacion);
+    document.getElementById('ai-hora').textContent = 'Último análisis: ' + hora;
+    ultimoDiagnostico = { estado, causa, confianza, diagnostico, recomendacion, hora };
+
+  } catch(e) {
+    clearInterval(msgInterval);
+    mostrarErrorIA('Error al conectar con el modelo IA: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    document.getElementById('ai-loading').style.display = 'none';
+  }
+}
+
+function mostrarResultadoIA(estado, causa, confianza, diagnostico, recomendacion) {
+  const configs = {
+    'NORMAL':         { cls:'verde',    ico:'🟢', color:'#4ade80', titulo:'Sistema operando con normalidad',        sub: causa },
+    'ALERTA_LEVE':    { cls:'amarillo', ico:'🟡', color:'#facc15', titulo:'Alerta leve detectada',                  sub: causa },
+    'ALERTA_CRITICA': { cls:'rojo',     ico:'🔴', color:'#f87171', titulo:'⚠ Alerta crítica — Intervención requerida', sub: causa },
+    'FALLO':          { cls:'rojo',     ico:'🚨', color:'#f87171', titulo:'Fallo detectado en el sistema',          sub: causa },
+  };
+  const cfg = configs[estado] || configs['NORMAL'];
+
+  document.getElementById('ai-semaforo').className   = 'semaforo ' + cfg.cls;
+  document.getElementById('ai-sem-ico').textContent  = cfg.ico;
+  document.getElementById('ai-titulo').textContent   = cfg.titulo;
+  document.getElementById('ai-subtitulo').textContent= cfg.sub;
+
+  const confScore = confianza === 'ALTA' ? '●●●' : confianza === 'MEDIA' ? '●●○' : '●○○';
+  document.getElementById('ai-score-display').textContent  = confScore;
+  document.getElementById('ai-score-display').style.color  = cfg.color;
+
+  let fullText = diagnostico;
+  if (recomendacion) fullText += '
+
+▸ Recomendación:
+' + recomendacion;
+  document.getElementById('ai-diagnostico').textContent = fullText;
+
+  // Tags
+  const tagsEl = document.getElementById('ai-tags');
+  const tagStyle = (bg, border, color) =>
+    `display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:.65rem;font-weight:600;letter-spacing:.05em;background:${bg};border:1px solid ${border};color:${color}`;
+  const estadoColors = {
+    'NORMAL':'rgba(34,197,94,.1),rgba(34,197,94,.3),#4ade80',
+    'ALERTA_LEVE':'rgba(234,179,8,.1),rgba(234,179,8,.3),#facc15',
+    'ALERTA_CRITICA':'rgba(239,68,68,.1),rgba(239,68,68,.3),#f87171',
+    'FALLO':'rgba(239,68,68,.15),rgba(239,68,68,.4),#fca5a5'
+  };
+  const [bg,bd,co] = (estadoColors[estado]||estadoColors['NORMAL']).split(',');
+  tagsEl.innerHTML = `
+    <span style="${tagStyle(bg,bd,co)}">${cfg.ico} ${estado.replace('_',' ')}</span>
+    <span style="${tagStyle('rgba(99,102,241,.1)','rgba(99,102,241,.3)','#a5b4fc')}">🤖 Claude Sonnet</span>
+    <span style="${tagStyle('rgba(255,255,255,.04)','rgba(255,255,255,.1)','#94a3b8')}">⚡ Confianza: ${confianza}</span>
+    <span style="${tagStyle('rgba(255,255,255,.04)','rgba(255,255,255,.1)','#94a3b8')}">📊 ${document.getElementById('ai-irr-avg').textContent}</span>
+  `;
+
+  document.getElementById('ai-output').style.display = 'block';
+
+  // Si es crítico, agregar al panel de alertas
+  if (estado === 'ALERTA_CRITICA' || estado === 'FALLO') {
+    enviarAlertaCorreo('ia-critico-'+new Date().toISOString().slice(0,13),
+      'IA detectó: ' + cfg.titulo, causa);
     const wrap = document.getElementById('alertas-wrap');
-    if (!document.getElementById('alerta-soi')) {
+    if (!document.getElementById('alerta-ia')) {
       const div = document.createElement('div');
-      div.id = 'alerta-soi'; div.className = 'alerta error';
-      div.innerHTML = `<span class="alerta-icono">🔴</span><div class="alerta-body"><div class="alerta-titulo">Panel sucio — Limpieza requerida (SOI: ${soi.toFixed(1)}%)</div><div class="alerta-desc">Pérdida de ${perdida.toFixed(0)} W con irradiancia de ${irradiancia.toFixed(0)} W/m².</div><div class="alerta-hora">${ahora}</div></div>`;
+      div.id = 'alerta-ia'; div.className = 'alerta error';
+      div.innerHTML = `<span class="alerta-icono">🤖</span><div class="alerta-body"><div class="alerta-titulo">IA: ${cfg.titulo}</div><div class="alerta-desc">${causa}</div><div class="alerta-hora">Análisis a las ${document.getElementById('ai-hora').textContent}</div></div>`;
       wrap.prepend(div);
     }
   }
+}
+
+function mostrarErrorIA(msg) {
+  document.getElementById('ai-loading').style.display = 'none';
+  document.getElementById('ai-output').style.display  = 'none';
+  document.getElementById('ai-idle').style.display    = 'none';
+  document.getElementById('ai-error').style.display   = 'flex';
+  document.getElementById('ai-error-msg').textContent = msg;
 }
 
 // CSV
@@ -697,18 +955,16 @@ function render(rows) {
   evalAlertas(latest);
   updateHeaderStats(latest);
 
-  const horaActual = new Date().getHours() * 60 + new Date().getMinutes();
-  const esDeDia    = horaActual >= 360 && horaActual < 1110;
-  if (latest.irr > 50 && esDeDia) {
-    calcularSOI(latest.irr, ultTDS ? ultTDS.tDS : 25, latest.potencia);
-  } else {
-    document.getElementById('soi-titulo').textContent = esDeDia ? 'Irradiancia insuficiente para calcular SOI' : 'Horario nocturno — SOI no disponible';
-    document.getElementById('soi-desc').textContent   = esDeDia ? 'Se requiere irradiancia > 50 W/m².' : 'El cálculo del SOI requiere radiación solar directa.';
-    document.getElementById('soi-semaforo').className = 'semaforo verde';
-    document.getElementById('soi-semaforo').children[0].textContent = '🌙';
-    document.getElementById('soi-valor').textContent  = 'N/A';
-    document.getElementById('soi-barra').style.width  = '0%';
-    document.getElementById('hs-soi').textContent = 'N/A';
+  // Actualizar métricas IA en tiempo real (sin ejecutar el modelo)
+  const mActual = calcularMetricas(allRows.slice(-60));
+  if (mActual) {
+    actualizarMetricasUI(mActual);
+    // Actualizar SOI en header
+    const hsEl = document.getElementById('hs-soi');
+    if (hsEl) {
+      hsEl.textContent = mActual.soiUlt.toFixed(1);
+      hsEl.style.color = mActual.soiUlt < 5 ? '#22c55e' : mActual.soiUlt < 10 ? '#eab308' : '#ef4444';
+    }
   }
 
   actualizarGraficas();
