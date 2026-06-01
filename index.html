@@ -14,13 +14,70 @@
     --red:#ef4444; --yellow:#eab308;
   }
   body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
-  header { padding:1rem 2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:rgba(17,24,39,0.9); backdrop-filter:blur(12px); position:sticky; top:0; z-index:10; }
-  .logo { display:flex; align-items:center; gap:10px; font-family:'Space Mono',monospace; font-size:.88rem; font-weight:700; letter-spacing:.06em; color:var(--amber); }
-  .logo-icon { width:32px; height:32px; background:linear-gradient(135deg,#f59e0b,#d97706); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; }
-  .pill { display:flex; align-items:center; gap:6px; font-size:.73rem; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:5px 14px; }
+
+  /* ══ HEADER ══ */
+  header {
+    width: 100%;
+    background: linear-gradient(135deg, #0d1829 0%, #111f35 60%, #0d1829 100%);
+    border-bottom: 1px solid rgba(245,158,11,0.2);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+  }
+  .header-inner {
+    width: 100%;
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    height: 76px;
+  }
+  .header-left { display:flex; align-items:center; gap:14px; flex-shrink:0; }
+  .uac-logo-box {
+    width:52px; height:52px; border-radius:10px;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; flex-shrink:0;
+    box-shadow: 0 2px 14px rgba(245,158,11,0.3);
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .uac-logo-box img { width:46px; height:46px; object-fit:contain; }
+  .uac-logo-fallback {
+    width:52px; height:52px; border-radius:10px;
+    background: linear-gradient(135deg,#1a3a6b,#2563a8);
+    display:none; align-items:center; justify-content:center;
+    font-size:24px; flex-shrink:0;
+    box-shadow: 0 2px 14px rgba(245,158,11,0.25);
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .header-title-block {}
+  .header-title { font-family:'Space Mono',monospace; font-size:.95rem; font-weight:700; letter-spacing:.08em; color:var(--amber); line-height:1.2; }
+  .header-subtitle { font-size:.68rem; color:var(--muted); letter-spacing:.02em; margin-top:3px; }
+
+  /* Centro del header — métricas rápidas */
+  .header-center {
+    flex:1; display:flex; align-items:center; justify-content:center;
+    gap:0;
+  }
+  .hs { display:flex; flex-direction:column; align-items:center; gap:2px; padding:0 1.4rem; border-left:1px solid var(--border); }
+  .hs:first-child { border-left:none; }
+  .hs-val { font-family:'Space Mono',monospace; font-size:1.05rem; font-weight:700; color:var(--text); }
+  .hs-lbl { font-size:.58rem; color:var(--muted); text-transform:uppercase; letter-spacing:.09em; white-space:nowrap; }
+
+  /* Derecha */
+  .header-right { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .autores {
+    font-size:.63rem; color:var(--muted); text-align:right; line-height:1.6;
+    border-right:1px solid var(--border); padding-right:14px;
+  }
+  .autores strong { color:rgba(245,158,11,.75); display:block; font-size:.65rem; }
+  .pill { display:flex; align-items:center; gap:6px; font-size:.71rem; color:var(--muted); background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:999px; padding:6px 14px; }
   .pulse { width:7px; height:7px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
-  main { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+
+  /* ══ MAIN ══ */
+  main { max-width:1600px; margin:0 auto; padding:2rem 2rem 5rem; }
+
   .section-label { font-size:.68rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:.9rem; }
   .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:2rem; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.25rem 1rem; position:relative; overflow:hidden; transition:border-color .2s; }
@@ -31,7 +88,6 @@
   .card .unit { font-size:.8rem; color:var(--muted); margin-left:4px; font-family:'DM Sans',sans-serif; }
   .card .sub { margin-top:.6rem; font-size:.71rem; color:var(--muted); }
 
-  /* SOI CARD */
   .soi-card { background:var(--surface); border:2px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:2rem; }
   .soi-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:10px; }
   .soi-header h2 { font-size:.85rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
@@ -39,15 +95,11 @@
   .soi-metric { background:rgba(255,255,255,0.03); border-radius:10px; padding:1rem; border:1px solid var(--border); }
   .soi-metric .label { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.5rem; }
   .soi-metric .val { font-family:'Space Mono',monospace; font-size:1.5rem; font-weight:700; }
-
-  /* SEMAFORO SOI */
   .semaforo { display:flex; align-items:center; gap:10px; padding:1rem 1.25rem; border-radius:10px; font-size:.85rem; font-weight:500; }
   .semaforo.verde  { background:rgba(34,197,94,.08);  border:1px solid rgba(34,197,94,.3);  color:#4ade80; }
   .semaforo.amarillo { background:rgba(234,179,8,.08); border:1px solid rgba(234,179,8,.3);  color:#facc15; }
   .semaforo.rojo   { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.3);  color:#f87171; }
   .semaforo-icono  { font-size:1.4rem; }
-
-  /* BARRA SOI */
   .soi-barra-wrap { margin-top:1rem; }
   .soi-barra-label { display:flex; justify-content:space-between; font-size:.7rem; color:var(--muted); margin-bottom:6px; }
   .soi-barra-bg { height:10px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; }
@@ -94,27 +146,83 @@
   #offline-banner .ob-tiempo { font-size:.7rem; color:#f87171; opacity:.55; font-family:'Space Mono',monospace; margin-top:4px; }
   body.dispositivo-offline .card .val { opacity:0.35; }
   body.dispositivo-offline .pulse { background:#ef4444; animation:blink 0.6s infinite; }
-  @media (max-width:700px) { .charts-row.two,.charts-row.half{grid-template-columns:1fr;} header{padding:.9rem 1rem;} main{padding:1.5rem 1rem 4rem;} .chart-header{flex-direction:column;align-items:flex-start;} }
+
+  @media (max-width:1100px) { .header-center { display:none; } }
+  @media (max-width:800px) {
+    .autores { display:none; }
+    .charts-row.two,.charts-row.half { grid-template-columns:1fr; }
+    .header-inner { padding:0 1rem; height:64px; }
+    main { padding:1.5rem 1rem 4rem; }
+    .chart-header { flex-direction:column; align-items:flex-start; }
+  }
 </style>
 </head>
 <body>
+
 <header>
-  <div class="logo"><div class="logo-icon">☀</div>ESTACIÓN SOLAR UAC</div>
-  <div class="pill"><div class="pulse"></div><span id="syncTime">Sincronizando…</span></div>
+  <div class="header-inner">
+
+    <div class="header-left">
+      <div class="uac-logo-box" id="logoBox">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Escudo_Universidad_Aut%C3%B3noma_del_Caribe.svg/240px-Escudo_Universidad_Aut%C3%B3noma_del_Caribe.svg.png"
+          alt="UAC"
+          onerror="document.getElementById('logoBox').style.display='none';document.getElementById('logoFb').style.display='flex';"
+        />
+      </div>
+      <div class="uac-logo-fallback" id="logoFb">🏛</div>
+      <div class="header-title-block">
+        <div class="header-title">ESTACIÓN SOLAR UAC</div>
+        <div class="header-subtitle">Ingeniería Mecatrónica &nbsp;·&nbsp; Universidad Autónoma del Caribe</div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="hs">
+        <div class="hs-val" id="hs-irr" style="color:#f59e0b">--</div>
+        <div class="hs-lbl">W/m² Irradiancia</div>
+      </div>
+      <div class="hs">
+        <div class="hs-val" id="hs-power" style="color:#f97316">--</div>
+        <div class="hs-lbl">W Potencia</div>
+      </div>
+      <div class="hs">
+        <div class="hs-val" id="hs-today" style="color:#a855f7">--</div>
+        <div class="hs-lbl">kWh Energía hoy</div>
+      </div>
+      <div class="hs">
+        <div class="hs-val" id="hs-temp" style="color:#ec4899">--</div>
+        <div class="hs-lbl">°C T. Panel</div>
+      </div>
+      <div class="hs">
+        <div class="hs-val" id="hs-soi" style="color:#22c55e">--</div>
+        <div class="hs-lbl">% SOI</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="autores">
+        <strong>Proyecto de Grado 2025–2026</strong>
+        Arciniegas &amp; Lagos &nbsp;·&nbsp; Asesores: PhD Villanueva &amp; Iván Tovar
+      </div>
+      <div class="pill"><div class="pulse"></div><span id="syncTime">Sincronizando…</span></div>
+    </div>
+
+  </div>
 </header>
+
 <main>
   <div class="error-banner" id="errBanner"></div>
   <div id="offline-banner">
     <div class="ob-icono">📡</div>
     <div>
       <div class="ob-titulo">ESP32 sin conexión — Dispositivo no iniciado o apagado</div>
-      <div class="ob-desc">No se han recibido datos nuevos en los últimos 5 minutos.</div>
+      <div class="ob-desc">No se han recibido datos nuevos en los últimos 10 minutos.</div>
       <div class="ob-tiempo" id="offline-tiempo"></div>
     </div>
   </div>
   <div id="alertas-wrap"></div>
 
-  <!-- MÉTRICAS METEOROLÓGICAS -->
   <p class="section-label">Variables meteorológicas — ESP32</p>
   <div class="cards">
     <div class="card" id="card-irr">
@@ -126,14 +234,39 @@
     <div class="card" id="card-tds">
       <div class="card-top" style="background:linear-gradient(90deg,#ec4899,#db2777)"></div>
       <h3>Temp. panel</h3>
-      <div><span class="val" id="v-tds" style="color:#ec4899">--</span><span class="unit">°C</span></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+          <rect x="2" y="6" width="34" height="22" rx="2.5" fill="#1e293b" stroke="#ec4899" stroke-width="1.4"/>
+          <rect x="4" y="8" width="9" height="8" rx="1" fill="#be185d" opacity=".9"/>
+          <rect x="14.5" y="8" width="9" height="8" rx="1" fill="#be185d" opacity=".9"/>
+          <rect x="25" y="8" width="9" height="8" rx="1" fill="#be185d" opacity=".9"/>
+          <rect x="4" y="17" width="9" height="8" rx="1" fill="#9d174d" opacity=".9"/>
+          <rect x="14.5" y="17" width="9" height="8" rx="1" fill="#9d174d" opacity=".9"/>
+          <rect x="25" y="17" width="9" height="8" rx="1" fill="#9d174d" opacity=".9"/>
+          <line x1="5" y1="9.5" x2="9" y2="9.5" stroke="#f9a8d4" stroke-width=".7" opacity=".5"/>
+          <line x1="15.5" y1="9.5" x2="19.5" y2="9.5" stroke="#f9a8d4" stroke-width=".7" opacity=".5"/>
+          <line x1="26" y1="9.5" x2="30" y2="9.5" stroke="#f9a8d4" stroke-width=".7" opacity=".5"/>
+          <line x1="12" y1="28" x2="9" y2="35" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="26" y1="28" x2="29" y2="35" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="7" y1="35" x2="31" y2="35" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div><span class="val" id="v-tds" style="color:#ec4899">--</span><span class="unit">°C</span></div>
+      </div>
       <div class="sub">DS18B20</div>
     </div>
     <div class="card" id="card-tdht">
       <div class="card-top" style="background:linear-gradient(90deg,#3b82f6,#2563eb)"></div>
       <h3>Temp. ambiente</h3>
-      <div><span class="val" id="v-tdht" style="color:#3b82f6">--</span><span class="unit">°C</span></div>
-      <div class="sub">DHT22</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="wx-icon" style="font-size:2.6rem;line-height:1;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">🌤</div>
+        <div>
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <span class="val" id="v-tdht" style="color:#3b82f6">--</span><span class="unit">°C</span>
+          </div>
+          <div id="wx-desc" style="margin-top:2px;font-size:.7rem;color:#94a3b8">--</div>
+        </div>
+      </div>
+      <div class="sub" style="margin-top:.5rem">DHT22 · Barranquilla</div>
     </div>
     <div class="card" id="card-hum">
       <div class="card-top" style="background:linear-gradient(90deg,#14b8a6,#0d9488)"></div>
@@ -143,7 +276,6 @@
     </div>
   </div>
 
-  <!-- MÉTRICAS ENPHASE -->
   <p class="section-label">Producción eléctrica — Enphase IQ7+</p>
   <div class="cards">
     <div class="card">
@@ -184,7 +316,6 @@
     </div>
   </div>
 
-  <!-- PANEL SOI -->
   <p class="section-label">Índice de suciedad del panel — Soiling Index (SOI)</p>
   <div class="soi-card" id="soi-card">
     <div class="soi-header">
@@ -192,32 +323,14 @@
       <span style="font-size:.72rem;color:var(--muted);font-family:'Space Mono',monospace" id="soi-hora">--</span>
     </div>
     <div class="soi-grid">
-      <div class="soi-metric">
-        <div class="label">Potencia real</div>
-        <div class="val" id="soi-real" style="color:#f97316">-- W</div>
-      </div>
-      <div class="soi-metric">
-        <div class="label">Potencia esperada (panel limpio)</div>
-        <div class="val" id="soi-esp" style="color:#22c55e">-- W</div>
-      </div>
-      <div class="soi-metric">
-        <div class="label">Pérdida estimada</div>
-        <div class="val" id="soi-perdida" style="color:#f59e0b">-- W</div>
-      </div>
-      <div class="soi-metric">
-        <div class="label">Soiling Index</div>
-        <div class="val" id="soi-valor" style="color:#f59e0b">--%</div>
-      </div>
+      <div class="soi-metric"><div class="label">Potencia real</div><div class="val" id="soi-real" style="color:#f97316">-- W</div></div>
+      <div class="soi-metric"><div class="label">Potencia esperada (panel limpio)</div><div class="val" id="soi-esp" style="color:#22c55e">-- W</div></div>
+      <div class="soi-metric"><div class="label">Pérdida estimada</div><div class="val" id="soi-perdida" style="color:#f59e0b">-- W</div></div>
+      <div class="soi-metric"><div class="label">Soiling Index</div><div class="val" id="soi-valor" style="color:#f59e0b">--%</div></div>
     </div>
     <div class="soi-barra-wrap">
-      <div class="soi-barra-label">
-        <span>Limpio (0%)</span>
-        <span>Limpiar (5%)</span>
-        <span>Crítico (10%+)</span>
-      </div>
-      <div class="soi-barra-bg">
-        <div class="soi-barra-fill" id="soi-barra" style="width:0%;background:#22c55e"></div>
-      </div>
+      <div class="soi-barra-label"><span>Limpio (0%)</span><span>Limpiar (5%)</span><span>Crítico (10%+)</span></div>
+      <div class="soi-barra-bg"><div class="soi-barra-fill" id="soi-barra" style="width:0%;background:#22c55e"></div></div>
     </div>
     <div class="semaforo verde" id="soi-semaforo" style="margin-top:1rem">
       <span class="semaforo-icono">🟢</span>
@@ -228,7 +341,6 @@
     </div>
   </div>
 
-  <!-- GRÁFICAS -->
   <p class="section-label">Histórico</p>
   <div class="charts-row two">
     <div class="chart-card">
@@ -284,7 +396,7 @@
         <option value="100">Últimas 100</option>
         <option value="all">Todas</option>
       </select>
-      <button onclick="descargarCSV()" style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#4ade80;border-radius:8px;padding:5px 14px;font-size:.72rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:all .15s;">
+      <button onclick="descargarCSV()" style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#4ade80;border-radius:8px;padding:5px 14px;font-size:.72rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;">
         ⬇ Descargar CSV
       </button>
     </div>
@@ -303,103 +415,64 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ════════════════════════════════════════
-//  CONFIGURACIÓN
-// ════════════════════════════════════════
-const CSV_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
-const COL         = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5, potencia:6, energiaHoy:7, corriente:8, estado:9 };
-const REFRESH_MS  = 60000;
-const OFFLINE_MS  = 10 * 60 * 1000;  // 10 minutos sin datos = offline
+const CSV_URL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzQa61x7Ts0XkYGh2iIzs7sML2FeBsf0AH-qOdHQ6hWGChhaol2OkuyXD9y5cC29o-iRzQmzXRrHcA/pub?output=csv';
+const COL        = { timestamp:0, irr:2, tDS:3, tDHT:4, hum:5, potencia:6, energiaHoy:7, corriente:8, estado:9 };
+const REFRESH_MS = 60000;
+const OFFLINE_MS = 10 * 60 * 1000;
+const POTENCIA_NOMINAL_W = 3262;
+const IRRADIANCIA_STC    = 1000;
+const EFICIENCIA_TEMP    = 0.004;
+const TEMP_REF           = 25;
+const SOI_UMBRAL_WARN    = 5;
+const SOI_UMBRAL_ERROR   = 10;
 
-// Enphase — leído desde la misma hoja Datos (columnas G-J)
-const POTENCIA_NOMINAL_W  = 3262;
-const IRRADIANCIA_STC     = 1000;
-const EFICIENCIA_TEMP     = 0.004;
-const TEMP_REF            = 25;    // °C temperatura de referencia STC
-const SOI_UMBRAL_WARN     = 5;     // % alerta amarilla
-const SOI_UMBRAL_ERROR    = 10;    // % alerta roja
+let filtroIrr = '1d', filtroTemp = '1d';
+let allRows = [], powerHistory = [];
 
-let filtroIrr  = '1d';
-let filtroTemp = '1d';
-let allRows    = [];
-let powerHistory = [];
-
-// ════════════════════════════════════════
-//  ENPHASE — leer desde Google Sheets
-// ════════════════════════════════════════
-async function fetchEnphase() {
-  try {
-    const res  = await fetch(ENPHASE_CSV + '&t=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    const lines = text.trim().split('\n');
-    if (lines.length < 2) return;
-
-    // Tomar la última fila (dato más reciente)
-    const cols   = lines[lines.length - 1].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || lines[lines.length - 1].split(',');
-    const clean  = cols.map(c => c.replace(/^"|"$/g,'').trim());
-
-    const data = {
-      current_power   : parseFloat(clean[COL_ENP.potencia])    || 0,
-      energy_today    : parseFloat(clean[COL_ENP.energiaHoy])  * 1000 || 0,
-      energy_lifetime : parseFloat(clean[COL_ENP.energiaTotal])* 1000000 || 0,
-      corriente_ac    : parseFloat(clean[COL_ENP.corriente])   || 0,
-      voltaje_ca      : parseFloat(clean[COL_ENP.voltaje])     || 218.8,
-      status          : clean[COL_ENP.estado] || '--',
-      modules         : parseInt(clean[COL_ENP.modulos])       || 9
-    };
-
-    renderEnphase(data);
-  } catch(e) {
-    console.warn('Enphase Sheets fetch error:', e.message);
+// WIDGET CLIMA DINÁMICO
+function getWeatherIcon(tempC, humPct) {
+  const h = new Date().getHours();
+  const esNoche = h < 6 || h >= 19;
+  // Lluvia: humedad muy alta + temperatura moderada
+  if (humPct >= 85 && tempC < 34) return { icon: '🌧', desc: 'Lluvioso' };
+  if (humPct >= 75 && tempC < 34) return { icon: '🌦', desc: 'Chubascos' };
+  if (esNoche) {
+    if (humPct > 65) return { icon: '🌙', desc: 'Noche nublada' };
+    return { icon: '🌙', desc: 'Noche despejada' };
   }
+  // Día
+  if (humPct >= 60) return { icon: '⛅', desc: 'Parcialmente nublado' };
+  if (tempC >= 34) return { icon: '☀️', desc: 'Soleado y caluroso' };
+  return { icon: '🌤', desc: 'Mayormente soleado' };
+}
+function actualizarWidgetClima(tempC, humPct) {
+  if (isNaN(tempC) || isNaN(humPct)) return;
+  const wx = getWeatherIcon(tempC, humPct);
+  const iconEl = document.getElementById('wx-icon');
+  const descEl = document.getElementById('wx-desc');
+  if (iconEl) iconEl.textContent = wx.icon;
+  if (descEl) descEl.textContent = wx.desc;
 }
 
-function renderEnphase(data) {
-  const powerW    = data.current_power || 0;
-  const todayWh   = data.energy_today  || 0;
-  const lifetimeWh= data.energy_lifetime || 0;
-  const status    = data.status || '--';
-
-  document.getElementById('v-power').textContent    = powerW.toLocaleString('es-CO');
-  document.getElementById('v-today').textContent    = (todayWh / 1000).toFixed(2);
-  document.getElementById('v-lifetime').textContent = (lifetimeWh / 1000000).toFixed(2);
-  document.getElementById('v-status').textContent   = status === 'normal' ? 'Normal ✓' : status;
-  document.getElementById('v-modules').textContent  = `${data.modules || 9} módulos`;
-
-  // Corriente calculada: I = P / V
-  const VOLTAJE_CA = 218.8;
-  const corriente  = powerW > 0 ? (powerW / VOLTAJE_CA).toFixed(2) : '0.00';
-  document.getElementById('v-corriente').textContent = corriente;
-  document.getElementById('v-voltaje').textContent   = VOLTAJE_CA.toFixed(1);
-
-  // Guardar historial de potencia
-  powerHistory.push({ t: new Date(), w: powerW });
-  if (powerHistory.length > 300) powerHistory.shift();
-  actualizarGraficaPower();
-
-  // Calcular SOI si hay irradiancia disponible
-  const irr = parseFloat(document.getElementById('v-irr').textContent);
-  const tDS  = parseFloat(document.getElementById('v-tds').textContent);
-  if (!isNaN(irr) && irr > 10) {
-    calcularSOI(irr, tDS, powerW);
-  }
+// HEADER STATS
+function updateHeaderStats(latest) {
+  if (!latest) return;
+  document.getElementById('hs-irr').textContent   = Number(latest.irr).toFixed(1);
+  document.getElementById('hs-power').textContent = Number(latest.potencia).toFixed(0);
+  document.getElementById('hs-today').textContent = Number(latest.energiaHoy).toFixed(3);
+  const ultTDS = [...allRows].reverse().find(r => r.tDS !== null);
+  document.getElementById('hs-temp').textContent  = ultTDS ? Number(ultTDS.tDS).toFixed(1) : '--';
 }
 
-// ════════════════════════════════════════
-//  CÁLCULO SOI
-// ════════════════════════════════════════
+// SOI
 function calcularSOI(irradiancia, tempPanel, potenciaReal) {
-  // Potencia esperada corregida por temperatura
-  const factorIrr  = irradiancia / IRRADIANCIA_STC;
-  const deltaTemp  = isNaN(tempPanel) ? 0 : (tempPanel - TEMP_REF) * EFICIENCIA_TEMP;
+  const factorIrr   = irradiancia / IRRADIANCIA_STC;
+  const deltaTemp   = isNaN(tempPanel) ? 0 : (tempPanel - TEMP_REF) * EFICIENCIA_TEMP;
   const potEsperada = POTENCIA_NOMINAL_W * factorIrr * (1 - deltaTemp);
-
   if (potEsperada <= 0) return;
-
   const soi     = Math.max(0, (1 - potenciaReal / potEsperada) * 100);
   const perdida = Math.max(0, potEsperada - potenciaReal);
-  const ahora   = new Date().toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'});
+  const ahora   = new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'});
 
   document.getElementById('soi-real').textContent    = potenciaReal.toFixed(0) + ' W';
   document.getElementById('soi-esp').textContent     = potEsperada.toFixed(0) + ' W';
@@ -407,134 +480,107 @@ function calcularSOI(irradiancia, tempPanel, potenciaReal) {
   document.getElementById('soi-valor').textContent   = soi.toFixed(1) + '%';
   document.getElementById('soi-hora').textContent    = 'Calculado a las ' + ahora;
 
-  // Barra de progreso
   const pct = Math.min(soi, 15);
   const barraEl = document.getElementById('soi-barra');
   barraEl.style.width = (pct / 15 * 100) + '%';
 
-  // Semáforo
-  const sem   = document.getElementById('soi-semaforo');
+  const soiEl = document.getElementById('hs-soi');
+  soiEl.textContent = soi.toFixed(1);
+  soiEl.style.color = soi < SOI_UMBRAL_WARN ? '#22c55e' : soi < SOI_UMBRAL_ERROR ? '#eab308' : '#ef4444';
+
+  const sem = document.getElementById('soi-semaforo');
   const titulo = document.getElementById('soi-titulo');
   const desc   = document.getElementById('soi-desc');
 
   if (soi < SOI_UMBRAL_WARN) {
-    sem.className = 'semaforo verde';
-    document.getElementById('soi-semaforo').children[0].textContent = '🟢';
+    sem.className = 'semaforo verde'; sem.children[0].textContent = '🟢';
     titulo.textContent = `Panel limpio — Pérdida estimada: ${soi.toFixed(1)}%`;
     desc.textContent   = 'El sistema opera dentro del rango esperado. No se requiere limpieza.';
     barraEl.style.background = '#22c55e';
   } else if (soi < SOI_UMBRAL_ERROR) {
-    sem.className = 'semaforo amarillo';
-    document.getElementById('soi-semaforo').children[0].textContent = '🟡';
+    sem.className = 'semaforo amarillo'; sem.children[0].textContent = '🟡';
     titulo.textContent = `Suciedad leve detectada — Pérdida estimada: ${soi.toFixed(1)}%`;
-    desc.textContent   = `El panel está perdiendo ${perdida.toFixed(0)} W respecto a lo esperado. Se recomienda programar limpieza pronto.`;
+    desc.textContent   = `Pérdida de ${perdida.toFixed(0)} W respecto a lo esperado. Se recomienda programar limpieza.`;
     barraEl.style.background = '#eab308';
   } else {
-    sem.className = 'semaforo rojo';
-    document.getElementById('soi-semaforo').children[0].textContent = '🔴';
+    sem.className = 'semaforo rojo'; sem.children[0].textContent = '🔴';
     titulo.textContent = `⚠ Limpieza necesaria — Pérdida estimada: ${soi.toFixed(1)}%`;
-    desc.textContent   = `El panel está perdiendo ${perdida.toFixed(0)} W. La suciedad supera el umbral crítico del ${SOI_UMBRAL_ERROR}%. Se requiere limpieza inmediata.`;
+    desc.textContent   = `Pérdida de ${perdida.toFixed(0)} W. Suciedad supera el umbral crítico del ${SOI_UMBRAL_ERROR}%. Se requiere limpieza inmediata.`;
     barraEl.style.background = '#ef4444';
-
-    // Enviar alerta por correo una sola vez
-    enviarAlertaCorreo(
-      'soi-critico',
-      `Panel sucio — Limpieza requerida (SOI: ${soi.toFixed(1)}%)`,
-      `Pérdida de ${perdida.toFixed(0)} W respecto a potencia esperada de ${potEsperada.toFixed(0)} W con irradiancia de ${irradiancia.toFixed(0)} W/m².`
-    );
-
-    // Agregar alerta en el panel de alertas
+    enviarAlertaCorreo('soi-critico', `Panel sucio — SOI: ${soi.toFixed(1)}%`, `Pérdida de ${perdida.toFixed(0)} W con irradiancia ${irradiancia.toFixed(0)} W/m².`);
     const wrap = document.getElementById('alertas-wrap');
-    const yaExiste = document.getElementById('alerta-soi');
-    if (!yaExiste) {
+    if (!document.getElementById('alerta-soi')) {
       const div = document.createElement('div');
-      div.id = 'alerta-soi';
-      div.className = 'alerta error';
-      div.innerHTML = `<span class="alerta-icono">🔴</span><div class="alerta-body"><div class="alerta-titulo">Panel sucio — Limpieza requerida (SOI: ${soi.toFixed(1)}%)</div><div class="alerta-desc">Pérdida de ${perdida.toFixed(0)} W respecto a potencia esperada de ${potEsperada.toFixed(0)} W con irradiancia actual de ${irradiancia.toFixed(0)} W/m².</div><div class="alerta-hora">Detectado a las ${ahora}</div></div>`;
+      div.id = 'alerta-soi'; div.className = 'alerta error';
+      div.innerHTML = `<span class="alerta-icono">🔴</span><div class="alerta-body"><div class="alerta-titulo">Panel sucio — Limpieza requerida (SOI: ${soi.toFixed(1)}%)</div><div class="alerta-desc">Pérdida de ${perdida.toFixed(0)} W con irradiancia de ${irradiancia.toFixed(0)} W/m².</div><div class="alerta-hora">${ahora}</div></div>`;
       wrap.prepend(div);
     }
   }
 }
 
-// ════════════════════════════════════════
-//  PARSEO CSV
-// ════════════════════════════════════════
+// CSV
 function parseTimestamp(ts) {
   const [fecha, hora] = ts.split(' ');
   if (!fecha || !hora) return null;
-  const [d,m,y] = fecha.split('/');
-  const [h,mi,s] = hora.split(':');
+  const [d,m,y] = fecha.split('/'); const [h,mi,s] = hora.split(':');
   return new Date(+y, +m-1, +d, +h, +mi, +(s||0));
 }
-
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
   return lines.slice(1).map(line => {
     const cols  = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || line.split(',');
     const clean = cols.map(c => c.replace(/^"|"$/g,'').trim());
-    const ts    = clean[COL.timestamp] || '--';
-    const tDS   = parseFloat(clean[COL.tDS]);
-    const tDHT  = parseFloat(clean[COL.tDHT]);
-    return {
-      ts, dt: parseTimestamp(ts),
-      irr      : parseFloat(clean[COL.irr])       || 0,
-      tDS      : (!isNaN(tDS)  && tDS  > -10 && tDS  < 100) ? tDS  : null,
-      tDHT     : (!isNaN(tDHT) && tDHT > -10 && tDHT < 80)  ? tDHT : null,
-      hum      : parseFloat(clean[COL.hum])       || 0,
-      potencia : parseFloat(clean[COL.potencia])  || 0,
+    const ts = clean[COL.timestamp] || '--';
+    const tDS = parseFloat(clean[COL.tDS]); const tDHT = parseFloat(clean[COL.tDHT]);
+    return { ts, dt: parseTimestamp(ts),
+      irr: parseFloat(clean[COL.irr]) || 0,
+      tDS:  (!isNaN(tDS)  && tDS  > -10 && tDS  < 100) ? tDS  : null,
+      tDHT: (!isNaN(tDHT) && tDHT > -10 && tDHT < 80)  ? tDHT : null,
+      hum: parseFloat(clean[COL.hum]) || 0,
+      potencia:  parseFloat(clean[COL.potencia])  || 0,
       energiaHoy: parseFloat(clean[COL.energiaHoy]) || 0,
       corriente: parseFloat(clean[COL.corriente]) || 0,
-      estado   : clean[COL.estado]                || '--'
+      estado: clean[COL.estado] || '--'
     };
   }).filter(r => r.ts !== '--' && r.dt !== null);
 }
-
 function filtrarPorPeriodo(rows, periodo) {
   if (periodo === 'all') return rows;
   const ahora = new Date();
-  const msMap = { '1d':86400000, '7d':604800000, '30d':2592000000 };
+  const msMap = { '1d':86400000,'7d':604800000,'30d':2592000000 };
   return rows.filter(r => r.dt && (ahora - r.dt) <= (msMap[periodo] || 86400000));
 }
-
 function diezmar(rows, max=300) {
   if (rows.length <= max) return rows;
   const paso = Math.ceil(rows.length / max);
   return rows.filter((_,i) => i % paso === 0);
 }
-
 function formatLabel(r, periodo) {
-  if (!r.dt) return r.ts;
-  const d = r.dt;
-  if (periodo === '1d') return d.toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'});
+  if (!r.dt) return r.ts; const d = r.dt;
+  if (periodo === '1d') return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   if (periodo === '7d') return `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:00`;
   return `${d.getDate()}/${d.getMonth()+1}`;
 }
 
-// ════════════════════════════════════════
-//  GAUGE
-// ════════════════════════════════════════
+// GAUGE
 function setGauge(pct) {
   const p = Math.max(0, Math.min(100, pct));
   document.getElementById('gArc').setAttribute('stroke-dasharray', `${204*p/100} ${204-204*p/100}`);
   const a = (-180+180*p/100)*Math.PI/180;
-  document.getElementById('gDot').setAttribute('cx',(80+65*Math.cos(a)).toFixed(1));
-  document.getElementById('gDot').setAttribute('cy',(85+65*Math.sin(a)).toFixed(1));
+  document.getElementById('gDot').setAttribute('cx', (80+65*Math.cos(a)).toFixed(1));
+  document.getElementById('gDot').setAttribute('cy', (85+65*Math.sin(a)).toFixed(1));
   document.getElementById('gVal').textContent = p.toFixed(1)+'%';
 }
 
-// ════════════════════════════════════════
-//  CHARTS
-// ════════════════════════════════════════
+// CHARTS
 const TICK = { color:'#64748b', font:{size:10,family:'Space Mono'} };
 const GRID = { color:'rgba(255,255,255,0.04)' };
 const DEF  = { responsive:true, maintainAspectRatio:false, animation:{duration:400},
   plugins:{legend:{display:false}},
   scales:{ x:{ticks:{...TICK,maxTicksLimit:8,maxRotation:30},grid:GRID}, y:{ticks:TICK,grid:GRID} }
 };
-
-let cIrr, cTemp, cHum, cPower;
-
+let cIrr, cTemp, cPower;
 function initCharts() {
   cIrr = new Chart(document.getElementById('cIrr'), {
     type:'line', data:{labels:[],datasets:[{data:[],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.08)',fill:true,tension:0.4,pointRadius:1.5,borderWidth:2,spanGaps:false}]},
@@ -552,57 +598,48 @@ function initCharts() {
     options:{...DEF,scales:{x:{ticks:{...TICK,maxTicksLimit:6,maxRotation:30},grid:GRID},y:{ticks:TICK,grid:GRID,min:0,title:{display:true,text:'W',color:'#64748b',font:{size:10}}}}}
   });
 }
-
 function actualizarGraficaPower() {
-  const labels = powerHistory.map(p => p.t.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}));
-  cPower.data.labels = labels;
+  cPower.data.labels = powerHistory.map(p => p.t.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}));
   cPower.data.datasets[0].data = powerHistory.map(p => p.w);
   cPower.update();
 }
-
 function actualizarGraficas() {
   const rowsI = diezmar(filtrarPorPeriodo(allRows, filtroIrr));
   cIrr.data.labels = rowsI.map(r => formatLabel(r, filtroIrr));
   cIrr.data.datasets[0].data = rowsI.map(r => r.irr);
   cIrr.data.datasets[0].pointRadius = rowsI.length > 100 ? 0 : 2;
   cIrr.update();
-
   const rowsT = diezmar(filtrarPorPeriodo(allRows, filtroTemp));
   cTemp.data.labels = rowsT.map(r => formatLabel(r, filtroTemp));
   cTemp.data.datasets[0].data = rowsT.map(r => r.tDS);
   cTemp.data.datasets[1].data = rowsT.map(r => r.tDHT);
-  cTemp.data.datasets[0].pointRadius = rowsT.length > 100 ? 0 : 2;
-  cTemp.data.datasets[1].pointRadius = rowsT.length > 100 ? 0 : 2;
+  cTemp.data.datasets[0].pointRadius = cTemp.data.datasets[1].pointRadius = rowsT.length > 100 ? 0 : 2;
   cTemp.update();
 }
-
 function setFiltro(tipo, periodo, btn) {
   document.getElementById('filtros-'+tipo).querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('activo'));
   btn.classList.add('activo');
-  if (tipo==='irr')  filtroIrr  = periodo;
-  if (tipo==='temp') filtroTemp = periodo;
+  if (tipo==='irr') filtroIrr = periodo; else filtroTemp = periodo;
   actualizarGraficas();
 }
 
-// ════════════════════════════════════════
-//  ALERTAS SENSORES
-// ════════════════════════════════════════
+// ALERTAS
 const REGLAS = [
   { id:'irr-nocturna', card:'card-irr', check(r) {
     const p=(r.ts.split(' ')[1]||'').split(':'); const t=(parseInt(p[0])||0)*60+(parseInt(p[1])||0);
     const noche=t<360||t>=1110;
-    if(noche&&r.irr>5)    return{titulo:'Irradiancia anómala — horario nocturno',desc:`${r.irr.toFixed(1)} W/m² de noche.`,tipo:'error'};
-    if(!noche&&r.irr<1)   return{titulo:'Piranómetro sin señal — horario diurno',desc:`0 W/m² entre 6:00 am y 6:30 pm. Posible error Modbus.`,tipo:'warn'};
+    if(noche&&r.irr>5) return{titulo:'Irradiancia anómala — horario nocturno',desc:`${r.irr.toFixed(1)} W/m² de noche.`,tipo:'error'};
+    if(!noche&&r.irr<1) return{titulo:'Piranómetro sin señal — horario diurno',desc:`0 W/m² entre 6:00 am y 6:30 pm.`,tipo:'warn'};
     return null;
   }},
   { id:'temp-panel', card:'card-tds', check(r) {
     if(r.tDS===null) return{titulo:'Error lectura sensor panel',desc:`DS18B20 fuera de rango.`,tipo:'error'};
-    if(r.tDS>90)     return{titulo:'Temperatura panel crítica',desc:`DS18B20: ${r.tDS.toFixed(1)} °C. Supera límite seguro.`,tipo:'error'};
+    if(r.tDS>90) return{titulo:'Temperatura panel crítica',desc:`DS18B20: ${r.tDS.toFixed(1)} °C.`,tipo:'error'};
     return null;
   }},
   { id:'temp-amb', card:'card-tdht', check(r) {
     if(r.tDHT===null) return{titulo:'Error lectura sensor ambiente',desc:`DHT22 fuera de rango.`,tipo:'error'};
-    if(r.tDHT>60)     return{titulo:'Temperatura ambiente anómala',desc:`DHT22: ${r.tDHT.toFixed(1)} °C.`,tipo:'warn'};
+    if(r.tDHT>60) return{titulo:'Temperatura ambiente anómala',desc:`DHT22: ${r.tDHT.toFixed(1)} °C.`,tipo:'warn'};
     return null;
   }},
   { id:'humedad', card:'card-hum', check(r) {
@@ -610,33 +647,27 @@ const REGLAS = [
     return null;
   }}
 ];
-
 function evalAlertas(latest) {
   const wrap  = document.getElementById('alertas-wrap');
   const ahora = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  ['card-irr','card-tds','card-tdht','card-hum'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('alerta-activa','warn-activa'); });
-  const alertasHtml = REGLAS.map(regla => {
+  ['card-irr','card-tds','card-tdht','card-hum'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('alerta-activa','warn-activa');});
+  const html = REGLAS.map(regla => {
     const res=regla.check(latest); if(!res) return '';
     const card=document.getElementById(regla.card); if(card) card.classList.add(res.tipo==='error'?'alerta-activa':'warn-activa');
-    // Enviar correo solo una vez por alerta
     enviarAlertaCorreo(regla.id, res.titulo, res.desc);
-    return `<div class="alerta ${res.tipo}"><span class="alerta-icono">${res.tipo==='error'?'⛔':'⚠️'}</span><div class="alerta-body"><div class="alerta-titulo">${res.titulo}</div><div class="alerta-desc">${res.desc}</div><div class="alerta-hora">Detectado a las ${ahora}</div></div></div>`;
+    return `<div class="alerta ${res.tipo}"><span class="alerta-icono">${res.tipo==='error'?'⛔':'⚠️'}</span><div class="alerta-body"><div class="alerta-titulo">${res.titulo}</div><div class="alerta-desc">${res.desc}</div><div class="alerta-hora">${ahora}</div></div></div>`;
   }).join('');
   const soiAlerta = document.getElementById('alerta-soi');
-  wrap.innerHTML = alertasHtml;
+  wrap.innerHTML = html;
   if (soiAlerta) wrap.prepend(soiAlerta);
 }
 
-// ════════════════════════════════════════
-//  OFFLINE
-// ════════════════════════════════════════
+// OFFLINE
 function verificarOffline(latest) {
   if(!latest||!latest.dt){mostrarOffline('Último dato sin timestamp válido.');return;}
   const atraso=Date.now()-latest.dt.getTime();
-  if(atraso>OFFLINE_MS){
-    const min=Math.floor(atraso/60000),hrs=Math.floor(min/60);
-    mostrarOffline(hrs>0?`Último dato hace ${hrs}h ${min%60}min`:`Último dato hace ${min} min`);
-  } else { ocultarOffline(); }
+  if(atraso>OFFLINE_MS){const min=Math.floor(atraso/60000),hrs=Math.floor(min/60);mostrarOffline(hrs>0?`Último dato hace ${hrs}h ${min%60}min`:`Último dato hace ${min} min`);}
+  else ocultarOffline();
 }
 function mostrarOffline(txt){
   document.getElementById('offline-banner').style.display='flex';
@@ -650,73 +681,69 @@ function ocultarOffline(){
   document.body.classList.remove('dispositivo-offline');
 }
 
-// ════════════════════════════════════════
-//  RENDER
-// ════════════════════════════════════════
+// RENDER
 function render(rows) {
   if(!rows.length) return;
-  allRows=rows;
-  const latest=rows[rows.length-1];
+  allRows = rows;
+  const latest = rows[rows.length-1];
   verificarOffline(latest);
   const ultTDS  = [...rows].reverse().find(r=>r.tDS!==null);
   const ultTDHT = [...rows].reverse().find(r=>r.tDHT!==null);
-  const ultEnp  = [...rows].reverse().find(r=>r.potencia > 0) || latest;
 
-  document.getElementById('v-irr').textContent  = Number(latest.irr).toFixed(1);
-  document.getElementById('v-tds').textContent  = ultTDS  ? Number(ultTDS.tDS).toFixed(1)   : '--';
-  document.getElementById('v-tdht').textContent = ultTDHT ? Number(ultTDHT.tDHT).toFixed(1) : '--';
-  document.getElementById('v-hum').textContent  = Number(latest.hum).toFixed(1);
+  document.getElementById('v-irr').textContent   = Number(latest.irr).toFixed(1);
+  document.getElementById('v-tds').textContent   = ultTDS  ? Number(ultTDS.tDS).toFixed(1)   : '--';
+  document.getElementById('v-tdht').textContent  = ultTDHT ? Number(ultTDHT.tDHT).toFixed(1) : '--';
+  document.getElementById('v-hum').textContent   = Number(latest.hum).toFixed(1);
+  document.getElementById('v-power').textContent = Number(latest.potencia).toLocaleString('es-CO');
+  document.getElementById('v-today').textContent = Number(latest.energiaHoy).toFixed(3);
+  document.getElementById('v-corriente').textContent = Number(latest.corriente).toFixed(2);
+  document.getElementById('v-status').textContent    = latest.estado === 'normal' ? 'Normal ✓' : (latest.estado || '--');
 
-  // Actualizar tarjetas Enphase desde el CSV
-  document.getElementById('v-power').textContent    = Number(latest.potencia).toLocaleString('es-CO');
-  document.getElementById('v-today').textContent    = Number(latest.energiaHoy).toFixed(3);
-  document.getElementById('v-corriente').textContent= Number(latest.corriente).toFixed(2);
-  document.getElementById('v-status').textContent   = latest.estado === 'normal' ? 'Normal ✓' : (latest.estado || '--');
+  powerHistory.push({ t: new Date(), w: latest.potencia });
+  if (powerHistory.length > 300) powerHistory.shift();
+  actualizarGraficaPower();
 
   if(!document.body.classList.contains('dispositivo-offline')) setGauge(latest.hum);
+  actualizarWidgetClima(ultTDHT ? ultTDHT.tDHT : NaN, latest.hum);
   evalAlertas(latest);
+  updateHeaderStats(latest);
 
-  // Calcular SOI con datos del CSV — solo de día con irradiancia significativa
   const horaActual = new Date().getHours() * 60 + new Date().getMinutes();
-  const esDeDia    = horaActual >= 360 && horaActual < 1110; // 6am a 6:30pm
+  const esDeDia    = horaActual >= 360 && horaActual < 1110;
   if (latest.irr > 50 && esDeDia) {
     calcularSOI(latest.irr, ultTDS ? ultTDS.tDS : 25, latest.potencia);
   } else {
-    // Limpiar SOI fuera de horario
     document.getElementById('soi-titulo').textContent = esDeDia ? 'Irradiancia insuficiente para calcular SOI' : 'Horario nocturno — SOI no disponible';
-    document.getElementById('soi-desc').textContent   = esDeDia ? 'Se requiere irradiancia > 50 W/m² para un cálculo confiable.' : 'El cálculo del Soiling Index requiere radiación solar directa.';
+    document.getElementById('soi-desc').textContent   = esDeDia ? 'Se requiere irradiancia > 50 W/m².' : 'El cálculo del SOI requiere radiación solar directa.';
     document.getElementById('soi-semaforo').className = 'semaforo verde';
     document.getElementById('soi-semaforo').children[0].textContent = '🌙';
-    document.getElementById('soi-valor').textContent   = 'N/A';
-    document.getElementById('soi-barra').style.width   = '0%';
+    document.getElementById('soi-valor').textContent  = 'N/A';
+    document.getElementById('soi-barra').style.width  = '0%';
+    document.getElementById('hs-soi').textContent = 'N/A';
   }
 
   actualizarGraficas();
   actualizarTabla();
-  document.getElementById('syncTime').textContent='Sync: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  document.getElementById('errBanner').style.display='none';
+  document.getElementById('syncTime').textContent = 'Sync: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('errBanner').style.display = 'none';
 }
 
-// ════════════════════════════════════════
-//  FETCH CSV
-// ════════════════════════════════════════
+// FETCH
 async function fetchData() {
   try {
-    const res=await fetch(CSV_URL+'&t='+Date.now());
+    const res = await fetch(CSV_URL+'&t='+Date.now());
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const rows=parseCSV(await res.text());
+    const rows = parseCSV(await res.text());
     if(rows.length) render(rows);
     else throw new Error('Sin filas de datos');
   } catch(e) {
-    document.getElementById('errBanner').textContent='⚠ Error: '+e.message+'. Reintentando…';
-    document.getElementById('errBanner').style.display='block';
-    document.getElementById('syncTime').textContent='Error — '+new Date().toLocaleTimeString('es-CO');
+    document.getElementById('errBanner').textContent = '⚠ Error: '+e.message+'. Reintentando…';
+    document.getElementById('errBanner').style.display = 'block';
+    document.getElementById('syncTime').textContent = 'Error — '+new Date().toLocaleTimeString('es-CO');
   }
 }
 
-// ════════════════════════════════════════
-//  TABLA DINÁMICA CON SELECTOR
-// ════════════════════════════════════════
+// TABLA
 function actualizarTabla() {
   if (!allRows.length) return;
   const sel   = document.getElementById('numRegistros').value;
@@ -725,95 +752,48 @@ function actualizarTabla() {
     <tr>
       <td style="color:var(--muted);font-size:.72rem">${r.ts}</td>
       <td style="color:#f59e0b">${Number(r.irr).toFixed(2)}</td>
-      <td style="color:#ec4899">${r.tDS!==null ? Number(r.tDS).toFixed(2) : '<span style="color:#ef4444">error</span>'}</td>
-      <td style="color:#3b82f6">${r.tDHT!==null ? Number(r.tDHT).toFixed(2) : '<span style="color:#ef4444">error</span>'}</td>
+      <td style="color:#ec4899">${r.tDS!==null?Number(r.tDS).toFixed(2):'<span style="color:#ef4444">error</span>'}</td>
+      <td style="color:#3b82f6">${r.tDHT!==null?Number(r.tDHT).toFixed(2):'<span style="color:#ef4444">error</span>'}</td>
       <td style="color:#14b8a6">${Number(r.hum).toFixed(2)}</td>
       <td style="color:#f97316">${Number(r.potencia).toFixed(0)}</td>
       <td style="color:#a855f7">${Number(r.energiaHoy).toFixed(3)}</td>
       <td style="color:#f59e0b">${Number(r.corriente).toFixed(2)}</td>
-      <td style="color:#22c55e;font-size:.68rem">${r.estado || '--'}</td>
+      <td style="color:#22c55e;font-size:.68rem">${r.estado||'--'}</td>
     </tr>`).join('');
 }
-
-// Actualizar tabla cuando cambia el selector
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('numRegistros').addEventListener('change', actualizarTabla);
 });
 
-// ════════════════════════════════════════
-//  DESCARGA CSV
-// ════════════════════════════════════════
+// CSV DOWNLOAD
 function descargarCSV() {
   if (!allRows.length) { alert('No hay datos para descargar.'); return; }
-
-  // Usar punto y coma como separador — Excel en español lo reconoce automáticamente
   const sep = ';';
-  const encabezado = [
-    'Timestamp','Irradiancia (W/m2)','T. Panel (°C)','T. Ambiente (°C)',
-    'Humedad (%)','Potencia (W)','Energia Hoy (kWh)','Corriente AC (A)','Estado'
-  ].join(sep);
-
-  const filas = allRows.map(r => [
-    `"${r.ts}"`,
-    r.irr.toFixed(2),
-    r.tDS  !== null ? r.tDS.toFixed(2)  : 'error',
-    r.tDHT !== null ? r.tDHT.toFixed(2) : 'error',
-    r.hum.toFixed(2),
-    r.potencia.toFixed(0),
-    r.energiaHoy.toFixed(3),
-    r.corriente.toFixed(2),
-    r.estado || '--'
-  ].join(sep));
-
-  // BOM para que Excel reconozca tildes y caracteres especiales
-  const BOM          = '\uFEFF';
-  const csvContent   = BOM + [encabezado, ...filas].join('\n');
-  const blob         = new Blob([csvContent], { type:'text/csv;charset=utf-8;' });
-  const url          = URL.createObjectURL(blob);
-  const link         = document.createElement('a');
-  const fecha        = new Date().toISOString().slice(0,10);
-
-  link.href     = url;
-  link.download = `estacion_solar_UAC_${fecha}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  const enc = ['Timestamp','Irradiancia (W/m2)','T. Panel (°C)','T. Ambiente (°C)','Humedad (%)','Potencia (W)','Energia Hoy (kWh)','Corriente AC (A)','Estado'].join(sep);
+  const filas = allRows.map(r => [`"${r.ts}"`,r.irr.toFixed(2),r.tDS!==null?r.tDS.toFixed(2):'error',r.tDHT!==null?r.tDHT.toFixed(2):'error',r.hum.toFixed(2),r.potencia.toFixed(0),r.energiaHoy.toFixed(3),r.corriente.toFixed(2),r.estado||'--'].join(sep));
+  const blob = new Blob(['\uFEFF'+[enc,...filas].join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `estacion_solar_UAC_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
 }
 
-// ════════════════════════════════════════
-//  ALERTAS POR CORREO (una sola vez)
-//  Usa el Apps Script como intermediario
-// ════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykUHDwBFkVF7VXvW-o7pjWbm6kcuDA-Y8TPMUMJx6NbREzzeKExEMN7VxcnJNr8ip-Aw/exec';
-const alertasEnviadas = new Set(); // guarda qué alertas ya se enviaron en esta sesión
-
+// CORREO
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxr1m29q74F1R0eovJTCIsGQq3UQp4vZwhZhmXYqmbRXVRpPC9oxkhcFNRoJ3MeJkuV9w/exec';
+const alertasEnviadas = new Set();
 async function enviarAlertaCorreo(id, titulo, desc) {
-  if (alertasEnviadas.has(id)) return; // ya se envió, no repetir
+  if (alertasEnviadas.has(id)) return;
   alertasEnviadas.add(id);
-
   try {
-    const params = new URLSearchParams({
-      accion       : 'alerta',
-      alerta_id    : id,
-      alerta_titulo: titulo,
-      alerta_desc  : desc,
-      timestamp    : new Date().toLocaleString('es-CO')
-    });
-    await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
-    console.log(`Alerta enviada por correo: ${id}`);
-  } catch(e) {
-    console.warn('Error enviando alerta por correo:', e.message);
-  }
+    await fetch(`${APPS_SCRIPT_URL}?${new URLSearchParams({accion:'alerta',alerta_id:id,alerta_titulo:titulo,alerta_desc:desc,timestamp:new Date().toLocaleString('es-CO')})}`);
+  } catch(e) { console.warn('Error alerta:', e.message); }
 }
 
-// ════════════════════════════════════════
-//  ARRANQUE
-// ════════════════════════════════════════
+// ARRANQUE
 initCharts();
 fetchData();
-fetchEnphase();
 setInterval(fetchData, REFRESH_MS);
-setInterval(fetchEnphase, REFRESH_MS);
-setInterval(()=>{ if(allRows.length) verificarOffline(allRows[allRows.length-1]); }, 60000);
+setInterval(() => { if(allRows.length) verificarOffline(allRows[allRows.length-1]); }, 60000);
 </script>
 </body>
 </html>
