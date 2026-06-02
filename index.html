@@ -698,10 +698,7 @@ function mostrarResultadoIA(estado, causa, confianza, diagnostico, recomendacion
   document.getElementById('ai-score-display').style.color  = cfg.color;
 
   let fullText = diagnostico;
-  if (recomendacion) fullText += '
-
-▸ Recomendación:
-' + recomendacion;
+  if (recomendacion) fullText += '\n\u25b8 Recomendacion:\n' + recomendacion;
   document.getElementById('ai-diagnostico').textContent = fullText;
 
   // Tags
