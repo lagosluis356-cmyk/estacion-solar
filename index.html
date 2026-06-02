@@ -503,11 +503,6 @@ function updateHeaderStats(latest) {
 
 // IA DIAGNÓSTICO
 // ════════════════════════════════════════════════════════
-const POTENCIA_NOMINAL_W = 3262;
-const IRRADIANCIA_STC    = 1000;
-const EFICIENCIA_TEMP    = 0.004;
-const TEMP_REF           = 25;
-
 let ultimoDiagnostico = null;
 
 function calcularMetricas(rows60) {
@@ -768,6 +763,9 @@ function parseTimestamp(ts) {
 }
 function parseCSV(text) {
   const lines = text.trim().split('\n');
+  console.log('CSV líneas totales:', lines.length);
+  if (lines.length > 1) console.log('Cabecera:', lines[0]);
+  if (lines.length > 2) console.log('Fila 2:', lines[1]);
   if (lines.length < 2) return [];
   return lines.slice(1).map(line => {
     const cols  = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || line.split(',');
@@ -924,6 +922,7 @@ function ocultarOffline(){
 
 // RENDER
 function render(rows) {
+  console.log('render() llamado con', rows.length, 'filas');
   if(!rows.length) return;
   allRows = rows;
   const latest = rows[rows.length-1];
@@ -969,16 +968,26 @@ function render(rows) {
 
 // FETCH
 async function fetchData() {
+  document.getElementById('syncTime').textContent = 'Conectando…';
   try {
     const res = await fetch(CSV_URL+'&t='+Date.now());
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const rows = parseCSV(await res.text());
-    if(rows.length) render(rows);
-    else throw new Error('Sin filas de datos');
+    const text = await res.text();
+    document.getElementById('syncTime').textContent = 'CSV OK, procesando…';
+    const rows = parseCSV(text);
+    if(rows.length) {
+      render(rows);
+    } else {
+      // Mostrar las primeras líneas del CSV para debug
+      const preview = text.split('\n').slice(0,3).join(' | ');
+      throw new Error('Sin filas parseadas. CSV preview: ' + preview.substring(0,200));
+    }
   } catch(e) {
-    document.getElementById('errBanner').textContent = '⚠ Error: '+e.message+'. Reintentando…';
+    const msg = '⚠ ' + e.message;
+    document.getElementById('errBanner').textContent = msg;
     document.getElementById('errBanner').style.display = 'block';
-    document.getElementById('syncTime').textContent = 'Error — '+new Date().toLocaleTimeString('es-CO');
+    document.getElementById('syncTime').textContent = 'Error';
+    console.error('fetchData error:', e);
   }
 }
 
