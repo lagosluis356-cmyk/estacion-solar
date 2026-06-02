@@ -287,12 +287,6 @@
       <div class="sub">Producción del día</div>
     </div>
     <div class="card">
-      <div class="card-top" style="background:linear-gradient(90deg,#22c55e,#16a34a)"></div>
-      <h3>Voltaje CA</h3>
-      <div><span class="val" id="v-status" style="color:#22c55e">--</span><span class="unit">V</span></div>
-      <div class="sub">Microinversor IQ7+</div>
-    </div>
-    <div class="card">
       <div class="card-top" style="background:linear-gradient(90deg,#f59e0b,#b45309)"></div>
       <h3>Corriente AC</h3>
       <div><span class="val" id="v-corriente" style="color:#f59e0b">--</span><span class="unit">A</span></div>
@@ -942,9 +936,9 @@ function render(rows) {
   document.getElementById('v-tdht').textContent  = ultTDHT ? Number(ultTDHT.tDHT).toFixed(1) : '--';
   document.getElementById('v-hum').textContent   = Number(latest.hum).toFixed(1);
   document.getElementById('v-power').textContent = Number(latest.potencia).toLocaleString('es-CO');
-  document.getElementById('v-today').textContent = Number(latest.energiaHoy).toFixed(3);
+  const vToday = document.getElementById('v-today'); if(vToday) vToday.textContent = Number(latest.energiaHoy).toFixed(3);
   document.getElementById('v-corriente').textContent = Number(latest.corriente).toFixed(2);
-  document.getElementById('v-status').textContent    = latest.estado === 'normal' ? 'Normal ✓' : (latest.estado || '--');
+  document.getElementById('v-voltaje').textContent   = Number(latest.estado).toFixed(1) || '218.8';
 
   powerHistory.push({ t: new Date(), w: latest.potencia });
   if (powerHistory.length > 300) powerHistory.shift();
