@@ -596,40 +596,37 @@ async function ejecutarDiagnostico() {
   const fecha = new Date().toLocaleDateString('es-CO');
 
   // Muestra cada 5 lecturas para no sobrecargar el prompt
-  const muestraRows = m.rows.filter((_,i) => i % 5 === 0).slice(-12);
-  const tablaCSV = muestraRows.map(r =>
-    `${r.ts},${r.irr.toFixed(1)},${r.potencia.toFixed(0)},${r.tDS!==null?r.tDS.toFixed(1):'N/A'},${r.tDHT!==null?r.tDHT.toFixed(1):'N/A'},${r.hum.toFixed(1)}`
-  ).join('
-');
+  const muestraRows = m.rows.filter(function(_,i){ return i % 5 === 0; }).slice(-12);
+  const filasCsv = muestraRows.map(function(r){
+    const tds  = r.tDS  !== null ? r.tDS.toFixed(1)  : 'N/A';
+    const tdht = r.tDHT !== null ? r.tDHT.toFixed(1) : 'N/A';
+    return r.ts + ',' + r.irr.toFixed(1) + ',' + r.potencia.toFixed(0) + ',' + tds + ',' + tdht + ',' + r.hum.toFixed(1);
+  });
+  const tablaCSV = filasCsv.join('\n');
 
-  const prompt = `Eres un experto en sistemas fotovoltaicos analizando una estación solar de la Universidad Autónoma del Caribe (Barranquilla, Colombia). El sistema tiene 9 microinversores Enphase IQ7+ con potencia nominal de 3262W.
-
-DATOS RESUMEN DE LA ÚLTIMA HORA (${m.n} lecturas):
-- Irradiancia promedio: ${m.avgIrr.toFixed(1)} W/m²
-- Potencia real promedio: ${m.avgPow.toFixed(0)} W
-- Potencia esperada (modelo físico): ${m.avgPotEsp.toFixed(0)} W
-- Eficiencia relativa: ${m.eficiencia !== null ? m.eficiencia.toFixed(1)+'%' : 'N/D'}
-- SOI puntual (última lectura): ${m.soiUlt.toFixed(1)}%
-- Temperatura panel promedio: ${m.avgTDS.toFixed(1)}°C
-- Temperatura ambiente promedio: ${m.avgTDHT.toFixed(1)}°C
-- Humedad relativa promedio: ${m.avgHum.toFixed(1)}%
-- Tendencia de potencia: ${m.tendencia} (${m.tendenciaPct.toFixed(1)}%)
-- Fecha y hora análisis: ${fecha} ${hora}
-
-MUESTRA DE LECTURAS RECIENTES (timestamp, irr W/m², potencia W, T.panel °C, T.ambiente °C, humedad %):
-${tablaCSV}
-
-Analiza estos datos y responde en español con el siguiente formato EXACTO (respeta las etiquetas):
-
-ESTADO: [NORMAL | ALERTA_LEVE | ALERTA_CRITICA | FALLO]
-CAUSA: [una línea corta: suciedad / degradación / fallo inversor / condición climática / normal]
-CONFIANZA: [ALTA | MEDIA | BAJA]
-
-DIAGNÓSTICO:
-[3 a 5 oraciones explicando qué está pasando, por qué lo concluyes con los datos, y si el SOI es confiable o puede estar siendo afectado por condiciones climáticas. Usa lenguaje técnico pero claro.]
-
-RECOMENDACIÓN:
-[1 a 3 acciones concretas según el estado detectado]`;
+  const eff    = m.eficiencia !== null ? m.eficiencia.toFixed(1) + '%' : 'N/D';
+  const prompt = 'Eres un experto en sistemas fotovoltaicos analizando una estacion solar de la Universidad Autonoma del Caribe (Barranquilla, Colombia). El sistema tiene 9 microinversores Enphase IQ7+ con potencia nominal de 3262W.\n\n'
+    + 'DATOS RESUMEN DE LA ULTIMA HORA (' + m.n + ' lecturas):\n'
+    + '- Irradiancia promedio: ' + m.avgIrr.toFixed(1) + ' W/m2\n'
+    + '- Potencia real promedio: ' + m.avgPow.toFixed(0) + ' W\n'
+    + '- Potencia esperada (modelo fisico): ' + m.avgPotEsp.toFixed(0) + ' W\n'
+    + '- Eficiencia relativa: ' + eff + '\n'
+    + '- SOI puntual (ultima lectura): ' + m.soiUlt.toFixed(1) + '%\n'
+    + '- Temperatura panel promedio: ' + m.avgTDS.toFixed(1) + ' C\n'
+    + '- Temperatura ambiente promedio: ' + m.avgTDHT.toFixed(1) + ' C\n'
+    + '- Humedad relativa promedio: ' + m.avgHum.toFixed(1) + '%\n'
+    + '- Tendencia de potencia: ' + m.tendencia + ' (' + m.tendenciaPct.toFixed(1) + '%)\n'
+    + '- Fecha y hora analisis: ' + fecha + ' ' + hora + '\n\n'
+    + 'MUESTRA DE LECTURAS RECIENTES (timestamp, irr W/m2, potencia W, T.panel C, T.ambiente C, humedad %):\n'
+    + tablaCSV + '\n\n'
+    + 'Analiza estos datos y responde en espanol con el siguiente formato EXACTO:\n\n'
+    + 'ESTADO: [NORMAL | ALERTA_LEVE | ALERTA_CRITICA | FALLO]\n'
+    + 'CAUSA: [una linea corta: suciedad / degradacion / fallo inversor / condicion climatica / normal]\n'
+    + 'CONFIANZA: [ALTA | MEDIA | BAJA]\n\n'
+    + 'DIAGNOSTICO:\n'
+    + '[3 a 5 oraciones explicando que esta pasando, por que lo concluyes con los datos, y si el SOI es confiable o puede estar siendo afectado por condiciones climaticas.]\n\n'
+    + 'RECOMENDACION:\n'
+    + '[1 a 3 acciones concretas segun el estado detectado]';
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -662,15 +659,10 @@ RECOMENDACIÓN:
     const confianza   = getField('CONFIANZA')  || 'MEDIA';
 
     // Extraer bloques de texto
-    const diagMatch  = texto.match(/DIAGNÓSTICO:
-([\s\S]*?)(?=
-RECOMENDACIÓN:|
-
-|$)/);
-    const recMatch   = texto.match(/RECOMENDACIÓN:
-([\s\S]*?)$/);
-    const diagnostico   = diagMatch ? diagMatch[1].trim() : texto;
-    const recomendacion = recMatch  ? recMatch[1].trim()  : '';
+        const diagIdx = texto.indexOf('DIAGNOSTICO:');
+    const recIdx  = texto.indexOf('RECOMENDACION:');
+    const diagnostico   = diagIdx >= 0 ? texto.substring(diagIdx + 13, recIdx >= 0 ? recIdx : undefined).trim() : texto;
+    const recomendacion = recIdx  >= 0 ? texto.substring(recIdx + 15).trim() : '';
 
     // Render resultado
     mostrarResultadoIA(estado, causa, confianza, diagnostico, recomendacion);
