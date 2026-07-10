@@ -442,7 +442,7 @@ const REFRESH_MS = 60000;
 const OFFLINE_MS = 10 * 60 * 1000;
 
 // Constantes fotovoltaicas
-const POTENCIA_NOMINAL_W = 3262;   // W — potencia nominal total 9 inversores
+const POTENCIA_NOMINAL_W = 1810;   // W — potencia nominal total 9 inversores
 const PR_NOMINAL         = 1810;   // W — potencia real máxima (5 inversores operativos × 362W)
 const IRRADIANCIA_STC    = 1000;   // W/m²
 const EFICIENCIA_TEMP    = 0.004;  // coeficiente temperatura panel/°C
@@ -609,7 +609,7 @@ async function ejecutarDiagnostico() {
   const tablaCSV = muestraRows.map(r=>[r.ts, r.irr.toFixed(1), r.potencia.toFixed(0), r.tDS!==null?r.tDS.toFixed(1):'NA', r.tDHT!==null?r.tDHT.toFixed(1):'NA', r.hum.toFixed(1)].join(',')).join('\n');
   const prAvgStr = m.avgPR !== null ? m.avgPR.toFixed(3) : 'N/D';
 
-  const promptTexto = 'Eres un experto en sistemas fotovoltaicos analizando la estacion solar de la Universidad Autonoma del Caribe (Barranquilla, Colombia). El sistema tiene 9 microinversores Enphase IQ7+ con 5 operativos actualmente. Potencia nominal total: 3262W. Potencia real maxima (5 inversores): 1810W.\n\n'
+  const promptTexto = 'Eres un experto en sistemas fotovoltaicos analizando la estacion solar de la Universidad Autonoma del Caribe (Barranquilla, Colombia). CONTEXTO DEL SISTEMA: 9 microinversores Enphase IQ7+ instalados, SOLO 5 OPERATIVOS (4 fallidos con seriales 121939091532, 121939091592, 121939092825, 121939093160). Potencia maxima real del sistema: 1810W (5 inversores x 362W). CONTEXTO EXPERIMENTO: Paneles lavados el 5 de julio 2026 — actualmente en FASE LIMPIA. Esta es la linea base del experimento de validacion del proyecto de grado. Ubicacion: Barranquilla Colombia (clima tropical costero, humedad alta, irradiancia pico tipica 900-1000 W/m2). El PR se calcula sobre base 1810W reales, NO sobre 3262W nominales.\n\n'
     + 'DATOS RESUMEN ULTIMA HORA (' + m.n + ' lecturas validas):\n'
     + '- Irradiancia promedio: ' + m.avgIrr.toFixed(1) + ' W/m2\n'
     + '- Potencia real promedio: ' + m.avgPow.toFixed(0) + ' W\n'
