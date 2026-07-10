@@ -285,7 +285,7 @@
         <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🤖</div>
         <div>
           <h2 style="color:#a5b4fc;font-size:.8rem;letter-spacing:.05em">ANÁLISIS IA — Estación Solar UAC</h2>
-          <div style="font-size:.65rem;color:var(--muted);margin-top:2px">Modelo: Claude Sonnet · Ventana: últimas 60 lecturas (~1 hora)</div>
+          <div style="font-size:.65rem;color:var(--muted);margin-top:2px">Modelo: Claude Sonnet · Ventana: día completo desde las 6:00am</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
@@ -587,8 +587,34 @@ function actualizarMetricasUI(m) {
 // ✅ IA via Apps Script como proxy (evita bloqueo CORS de GitHub Pages)
 async function ejecutarDiagnostico() {
   if (!allRows.length) { alert('No hay datos cargados aún.'); return; }
-  const rows60 = allRows.slice(-60);
-  const m = calcularMetricas(rows60);
+
+  // ✅ VENTANA DINÁMICA — analiza todo el día desde las 6am
+  const ahora = new Date();
+  const horaActual = ahora.getHours();
+  let rowsAnalisis;
+
+  if (horaActual >= 6 && horaActual < 19) {
+    // Día: analiza desde las 6am hasta ahora
+    const inicio6am = new Date(ahora);
+    inicio6am.setHours(6, 0, 0, 0);
+    rowsAnalisis = allRows.filter(r => r.dt && r.dt >= inicio6am);
+    if (rowsAnalisis.length < 10) rowsAnalisis = allRows.slice(-60); // fallback
+  } else if (horaActual >= 19) {
+    // Noche: analiza las últimas horas de luz del día (desde las 15:00)
+    const inicio15h = new Date(ahora);
+    inicio15h.setHours(15, 0, 0, 0);
+    rowsAnalisis = allRows.filter(r => r.dt && r.dt >= inicio15h);
+    if (rowsAnalisis.length < 10) rowsAnalisis = allRows.slice(-60);
+  } else {
+    // Madrugada (0-6am): sin datos útiles
+    rowsAnalisis = allRows.slice(-60);
+  }
+
+  const ventanaDesc = horaActual >= 6 && horaActual < 19
+    ? 'desde las 6:00am hasta ahora (' + rowsAnalisis.length + ' lecturas)'
+    : 'últimas horas del día (' + rowsAnalisis.length + ' lecturas)';
+
+  const m = calcularMetricas(rowsAnalisis);
   if (!m) { mostrarErrorIA('Sin irradiancia suficiente para analizar (¿es de noche?)'); return; }
   actualizarMetricasUI(m);
 
@@ -599,7 +625,7 @@ async function ejecutarDiagnostico() {
   document.getElementById('ai-error').style.display   = 'none';
   document.getElementById('ai-loading').style.display = 'flex';
 
-  const msgs = ['Procesando ' + m.n + ' lecturas válidas...','Evaluando eficiencia relativa...','Calculando Performance Ratio...','Generando diagnóstico IA...'];
+  const msgs = ['Procesando ' + ventanaDesc + '...','Evaluando eficiencia relativa...','Calculando Performance Ratio...','Generando diagnóstico IA...'];
   let mi = 0;
   const mi_int = setInterval(() => { mi=(mi+1)%msgs.length; const el=document.getElementById('ai-loading-msg'); if(el) el.textContent=msgs[mi]; }, 1800);
 
@@ -610,7 +636,7 @@ async function ejecutarDiagnostico() {
   const prAvgStr = m.avgPR !== null ? m.avgPR.toFixed(3) : 'N/D';
 
   const promptTexto = 'Eres un experto en sistemas fotovoltaicos analizando la estacion solar de la Universidad Autonoma del Caribe (Barranquilla, Colombia). CONTEXTO DEL SISTEMA: 9 microinversores Enphase IQ7+ instalados, SOLO 5 OPERATIVOS (4 fallidos con seriales 121939091532, 121939091592, 121939092825, 121939093160). Potencia maxima real del sistema: 1810W (5 inversores x 362W). CONTEXTO EXPERIMENTO: Paneles lavados el 5 de julio 2026 — actualmente en FASE LIMPIA. Esta es la linea base del experimento de validacion del proyecto de grado. Ubicacion: Barranquilla Colombia (clima tropical costero, humedad alta, irradiancia pico tipica 900-1000 W/m2). El PR se calcula sobre base 1810W reales, NO sobre 3262W nominales.\n\n'
-    + 'DATOS RESUMEN ULTIMA HORA (' + m.n + ' lecturas validas):\n'
+    + 'DATOS RESUMEN DEL DIA — ' + ventanaDesc + ':\n'
     + '- Irradiancia promedio: ' + m.avgIrr.toFixed(1) + ' W/m2\n'
     + '- Potencia real promedio: ' + m.avgPow.toFixed(0) + ' W\n'
     + '- Potencia esperada (modelo fisico): ' + m.avgPotEsp.toFixed(0) + ' W\n'
