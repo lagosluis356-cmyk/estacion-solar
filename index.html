@@ -525,11 +525,9 @@ function updateHeaderStats(latest) {
 //  IA — MÉTRICAS Y DIAGNÓSTICO
 // ════════════════════════════════════════════════════════════
 function calcularMetricas(rows60) {
-  // ✅ Solo lecturas con irradiancia >= 200 W/m² (zona lineal real del sistema)
-  // Elimina ruido de amanecer/atardecer que distorsiona PR y eficiencia
-  const valid = rowsAnalisis
-    ? rowsAnalisis.filter(r => r.irr >= 200 && r.potencia >= 0)
-    : rows60.filter(r => r.irr >= 200 && r.potencia >= 0);
+  // Solo lecturas con irradiancia >= 200 W/m² (IEC 61724-1)
+  // Elimina amanecer/atardecer que distorsionan PR y eficiencia
+  const valid = rows60.filter(r => r.irr >= 200 && r.potencia >= 0);
   if (!valid.length) return null;
 
   const avgIrr  = valid.reduce((s,r) => s + r.irr, 0) / valid.length;
