@@ -460,7 +460,9 @@ let allRows = [], powerHistory = [];
 // PR = E_real / (G × P_nominal / G_STC)
 // Usando PR_NOMINAL (1810W) — potencia real con 5 inversores activos
 function calcularPR(potencia, irr) {
-  if (!irr || irr < 10) return null;
+  // Solo calcular PR con irradiancia >= 200 W/m² (IEC 61724-1)
+  // Amanecer/atardecer distorsionan el resultado
+  if (!irr || irr < 200) return null;
   const pr = potencia / (PR_NOMINAL * irr / IRRADIANCIA_STC);
   return Math.max(0, Math.min(1.2, pr));
 }
@@ -523,7 +525,11 @@ function updateHeaderStats(latest) {
 //  IA — MÉTRICAS Y DIAGNÓSTICO
 // ════════════════════════════════════════════════════════════
 function calcularMetricas(rows60) {
-  const valid = rows60.filter(r => r.irr > 10 && r.potencia >= 0);
+  // ✅ Solo lecturas con irradiancia >= 200 W/m² (zona lineal real del sistema)
+  // Elimina ruido de amanecer/atardecer que distorsiona PR y eficiencia
+  const valid = rowsAnalisis
+    ? rowsAnalisis.filter(r => r.irr >= 200 && r.potencia >= 0)
+    : rows60.filter(r => r.irr >= 200 && r.potencia >= 0);
   if (!valid.length) return null;
 
   const avgIrr  = valid.reduce((s,r) => s + r.irr, 0) / valid.length;
@@ -641,7 +647,14 @@ async function ejecutarDiagnostico() {
     + '- Potencia real promedio: ' + m.avgPow.toFixed(0) + ' W\n'
     + '- Potencia esperada (modelo fisico): ' + m.avgPotEsp.toFixed(0) + ' W\n'
     + '- Eficiencia relativa: ' + (m.eficiencia!==null?m.eficiencia.toFixed(1)+'%':'N/D') + '\n'
-    + '- Performance Ratio (PR) promedio: ' + prAvgStr + ' (IEC 61724-1, base 1810W)\n'
+    + '- Performance Ratio (PR) promedio: ' + prAvgStr + ' (IEC 61724-1, solo irr>=200 W/m2, base 1810W)\n'
+    + '\n'
+    + 'CRITERIO IMPORTANTE DE ANALISIS:\n'
+    + '- Solo lecturas con irradiancia >= 200 W/m2 son validas para evaluar rendimiento.\n'
+    + '- Irradiancia < 200 W/m2 = amanecer/atardecer = NO indica suciedad ni fallo.\n'
+    + '- Si PR promedio filtrado >= 0.75 el sistema opera bien aunque haya valores bajos al inicio/fin del dia.\n'
+    + '- Diagnosticar suciedad solo cuando PR < 0.75 con irradiancia plena sostenida.\n'
+    + '\n'
     + '- SOI puntual ultima lectura: ' + m.soiUlt.toFixed(1) + '%\n'
     + '- Temperatura panel promedio: ' + m.avgTDS.toFixed(1) + ' C\n'
     + '- Temperatura ambiente promedio: ' + m.avgTDHT.toFixed(1) + ' C\n'
