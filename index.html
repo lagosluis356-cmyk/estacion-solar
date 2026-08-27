@@ -450,6 +450,61 @@ let filtroIrr = '1d', filtroTemp = '1d';
 let allRows = [], powerHistory = [];
 
 // ════════════════════════════════════════════════════════════
+//  MODELO RANDOM FOREST — potencia esperada (98,543 registros
+//  reales, fase limpia, R2=0.879 / MAE=78.5W validado en dias
+//  no vistos). Reemplaza la formula fisica simple cuando esta
+//  disponible; si no carga, usa la formula fisica como respaldo.
+// ════════════════════════════════════════════════════════════
+let RF_MODEL = null;
+let RF_MODEL_LISTO = false;
+
+async function cargarModeloRF() {
+  try {
+    const resp = await fetch('rf_model.json');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    RF_MODEL = await resp.json();
+    RF_MODEL_LISTO = true;
+    console.log(`Modelo RF cargado: ${RF_MODEL.n_trees} arboles, features: ${RF_MODEL.features.join(', ')}`);
+  } catch (e) {
+    console.warn('No se pudo cargar el modelo RF, se usara el modelo fisico simple como respaldo:', e.message);
+    RF_MODEL_LISTO = false;
+  }
+}
+
+function _predecirArbol(tree, x) {
+  let idx = 0;
+  let node = tree[idx];
+  while (!('leaf' in node)) {
+    idx = x[node.f] <= node.t ? node.l : node.r;
+    node = tree[idx];
+  }
+  return node.leaf;
+}
+
+// Orden de x: [irr, tpanel, tamb, hum, hour] (debe coincidir con RF_MODEL.features)
+function predecirPotenciaRF(irr, tpanel, tamb, hum, hour) {
+  if (!RF_MODEL_LISTO) return null;
+  const x = [irr, tpanel, tamb, hum, hour];
+  let suma = 0;
+  for (const tree of RF_MODEL.trees) {
+    suma += _predecirArbol(tree, x);
+  }
+  return suma / RF_MODEL.n_trees;
+}
+
+// Calcula la potencia esperada para una fila, usando RF si esta listo,
+// o la formula fisica simple como respaldo. Centraliza la logica para
+// que calcularMetricas() y el resto del dashboard usen siempre lo mismo.
+function potenciaEsperada(irr, tPanel, tAmbiente, hum, horaDecimal) {
+  if (RF_MODEL_LISTO) {
+    const pred = predecirPotenciaRF(irr, tPanel, tAmbiente, hum, horaDecimal);
+    if (pred !== null) return Math.max(0, pred);
+  }
+  const f = irr / IRRADIANCIA_STC;
+  return POTENCIA_NOMINAL_W * f * (1 - (tPanel - TEMP_REF) * EFICIENCIA_TEMP);
+}
+
+// ════════════════════════════════════════════════════════════
 //  PERFORMANCE RATIO (PR) — IEC 61724-1
 // ════════════════════════════════════════════════════════════
 function calcularPR(potencia, irr) {
@@ -527,10 +582,13 @@ function calcularMetricas(rows60) {
   const avgTDHT = tDHTArr.length ? tDHTArr.reduce((s,r)=>s+r.tDHT,0)/tDHTArr.length : 0;
   const avgHum  = valid.reduce((s,r)=>s+r.hum,0)/valid.length;
 
+  // ✅ Potencia esperada: usa el modelo Random Forest (98,543 registros,
+  // R2=0.879) si esta cargado; si no, cae al modelo fisico simple.
   const potEsperadas = valid.map(r => {
-    const f      = r.irr / IRRADIANCIA_STC;
     const tPanel = r.tDS !== null ? r.tDS : avgTDHT + 20;
-    return POTENCIA_NOMINAL_W * f * (1 - (tPanel - TEMP_REF) * EFICIENCIA_TEMP);
+    const tAmb   = r.tDHT !== null ? r.tDHT : avgTDHT;
+    const horaDecimal = r.dt ? (r.dt.getHours() + r.dt.getMinutes()/60) : 12;
+    return potenciaEsperada(r.irr, tPanel, tAmb, r.hum, horaDecimal);
   });
   const avgPotEsp = potEsperadas.reduce((s,v)=>s+v,0)/potEsperadas.length;
   const eficiencia = avgPotEsp > 0 ? (avgPow / avgPotEsp * 100) : null;
@@ -541,18 +599,20 @@ function calcularMetricas(rows60) {
   const tendenciaPct = powFirst > 0 ? ((powLast-powFirst)/powFirst*100) : 0;
   const tendencia = tendenciaPct > 3 ? '↑ Subiendo' : tendenciaPct < -3 ? '↓ Bajando' : '→ Estable';
 
-  const ultima   = valid[valid.length-1];
-  const fUlt     = ultima.irr / IRRADIANCIA_STC;
-  const tPanelUlt= ultima.tDS !== null ? ultima.tDS : avgTDHT+20;
-  const potEspUlt= POTENCIA_NOMINAL_W * fUlt * (1-(tPanelUlt-TEMP_REF)*EFICIENCIA_TEMP);
-  const soiUlt   = potEspUlt > 0 ? Math.max(0,(1-ultima.potencia/potEspUlt)*100) : 0;
+  const ultima    = valid[valid.length-1];
+  const tPanelUlt = ultima.tDS !== null ? ultima.tDS : avgTDHT+20;
+  const tAmbUlt   = ultima.tDHT !== null ? ultima.tDHT : avgTDHT;
+  const horaUlt   = ultima.dt ? (ultima.dt.getHours() + ultima.dt.getMinutes()/60) : 12;
+  const potEspUlt = potenciaEsperada(ultima.irr, tPanelUlt, tAmbUlt, ultima.hum, horaUlt);
+  const soiUlt    = potEspUlt > 0 ? Math.max(0,(1-ultima.potencia/potEspUlt)*100) : 0;
 
   const prValues = valid.map(r => calcularPR(r.potencia, r.irr)).filter(v => v !== null);
   const avgPR    = prValues.length ? prValues.reduce((s,v)=>s+v,0)/prValues.length : null;
 
   return { avgIrr, avgPow, avgPotEsp, avgTDS, avgTDHT, avgHum,
            eficiencia, tendencia, tendenciaPct, soiUlt, avgPR,
-           n: valid.length, rows: valid };
+           n: valid.length, rows: valid,
+           metodoModelo: RF_MODEL_LISTO ? 'Random Forest (R2=0.879)' : 'formula fisica simple' };
 }
 
 function actualizarMetricasUI(m) {
@@ -628,6 +688,8 @@ async function ejecutarDiagnostico() {
   // inferir por sí mismo, a partir del PR/eficiencia/SOI, si hay indicios de
   // suciedad, degradación o fallo — no se le dice de antemano si está limpio,
   // sucio, o en qué "fase" del experimento está.
+  // ✅ La potencia esperada ahora viene del modelo Random Forest entrenado
+  // (98,543 registros reales, R2=0.879), no solo de la formula fisica.
   // ════════════════════════════════════════════════════════════
   const promptTexto = 'Eres un experto en sistemas fotovoltaicos analizando la estacion solar de la Universidad Autonoma del Caribe (Barranquilla, Colombia). '
     + 'HECHOS DEL HARDWARE (verificados, no interpretar mas alla de esto): 9 microinversores Enphase IQ7+ instalados y operativos. Potencia nominal real del sistema: 3258W (9 x 362W). Ubicacion: Barranquilla, Colombia (clima tropical costero, humedad alta, irradiancia pico tipica 900-1000 W/m2). '
@@ -635,7 +697,7 @@ async function ejecutarDiagnostico() {
     + 'DATOS RESUMEN DEL DIA — ' + ventanaDesc + ':\n'
     + '- Irradiancia promedio: ' + m.avgIrr.toFixed(1) + ' W/m2\n'
     + '- Potencia real promedio: ' + m.avgPow.toFixed(0) + ' W\n'
-    + '- Potencia esperada (modelo fisico): ' + m.avgPotEsp.toFixed(0) + ' W\n'
+    + '- Potencia esperada (' + m.metodoModelo + '): ' + m.avgPotEsp.toFixed(0) + ' W\n'
     + '- Eficiencia relativa: ' + (m.eficiencia!==null?m.eficiencia.toFixed(1)+'%':'N/D') + '\n'
     + '- Performance Ratio (PR) promedio: ' + prAvgStr + ' (IEC 61724-1, solo irr>=200 W/m2, base 3258W)\n'
     + '\n'
@@ -645,6 +707,7 @@ async function ejecutarDiagnostico() {
     + '- PR >= 0.75 sostenido con irradiancia plena = sistema operando bien.\n'
     + '- PR entre 0.60 y 0.74 sostenido con irradiancia plena = posible suciedad o degradacion leve; sugierelo como hipotesis, no como certeza.\n'
     + '- PR < 0.60 con irradiancia plena, o potencia cercana a 0 con irradiancia alta = posible fallo de hardware (microinversor caido, cableado, etc.); distinguelo de la suciedad porque la caida suele ser abrupta y no gradual.\n'
+    + '- Una caida GRADUAL y sostenida en varios dias sugiere suciedad progresiva. Una caida ABRUPTA y puntual sugiere falla de hardware. Usa la tendencia de potencia (abajo) como referencia temporal.\n'
     + '- Debes decidir tu mismo, con los numeros de arriba, si el patron observado se parece mas a suciedad, a fallo, a condicion climatica, o a operacion normal. No repitas la nota de contexto como si fuera tu conclusion.\n'
     + '\n'
     + '- SOI puntual ultima lectura: ' + m.soiUlt.toFixed(1) + '%\n'
@@ -1043,6 +1106,7 @@ async function enviarAlertaCorreo(id, titulo, desc) {
 // ════════════════════════════════════════════════════════════
 //  ARRANQUE
 // ════════════════════════════════════════════════════════════
+cargarModeloRF();
 initCharts();
 fetchData();
 setInterval(fetchData, REFRESH_MS);
