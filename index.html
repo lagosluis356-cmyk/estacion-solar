@@ -347,21 +347,6 @@
         <span style="font-size:1.4rem">⛔</span>
         <div id="ai-error-msg">Error al conectar con el modelo IA.</div>
       </div>
-
-      <!-- ✅ NUEVO: mini-chat para preguntas libres a la IA -->
-      <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1rem">
-        <div style="font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem">Preguntar algo específico</div>
-        <div id="ai-chat-historial" style="display:flex;flex-direction:column;gap:8px;margin-bottom:.75rem;max-height:320px;overflow-y:auto"></div>
-        <div style="display:flex;gap:8px">
-          <input id="ai-chat-input" type="text" placeholder='Ej: "analiza de 6am a 2pm" o "¿qué pasó ayer?" (datos disponibles: últimos 5 días)'
-            style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.78rem;font-family:'DM Sans',sans-serif"
-            onkeydown="if(event.key==='Enter') enviarPreguntaIA()">
-          <button id="ai-chat-btn" onclick="enviarPreguntaIA()"
-            style="background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(139,92,246,.2));border:1px solid rgba(99,102,241,.4);color:#a5b4fc;border-radius:8px;padding:8px 16px;font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap">
-            Preguntar
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -853,99 +838,6 @@ function mostrarErrorIA(msg) {
   document.getElementById('ai-idle').style.display    = 'none';
   document.getElementById('ai-error').style.display   = 'flex';
   document.getElementById('ai-error-msg').textContent = msg;
-}
-
-// ════════════════════════════════════════════════════════════
-// ✅ NUEVO: mini-chat de preguntas libres sobre los datos del sistema.
-// El usuario escribe en lenguaje natural (ej. "analiza de 6am a 2pm");
-// NO se hace un parser de fechas propio -se le pasan a la IA los datos
-// del dia completo con sus timestamps reales, y ella misma identifica
-// el rango que el usuario pidio, igual que lo harias tu leyendo la tabla.
-// ════════════════════════════════════════════════════════════
-let historialChatIA = []; // {rol:'user'|'ia', texto:string}
-
-function renderChatIA() {
-  const cont = document.getElementById('ai-chat-historial');
-  cont.innerHTML = historialChatIA.map(m => {
-    if (m.rol === 'user') {
-      return `<div style="align-self:flex-end;max-width:85%;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:10px 10px 2px 10px;padding:.6rem .9rem;font-size:.78rem;color:#e0e7ff">${m.texto}</div>`;
-    }
-    return `<div style="align-self:flex-start;max-width:90%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px 10px 10px 2px;padding:.6rem .9rem;font-size:.78rem;color:#cbd5e1;white-space:pre-wrap">${m.texto}</div>`;
-  }).join('');
-  cont.scrollTop = cont.scrollHeight;
-}
-
-async function enviarPreguntaIA() {
-  const input = document.getElementById('ai-chat-input');
-  const pregunta = input.value.trim();
-  if (!pregunta) return;
-  if (!allRows.length) { alert('No hay datos cargados aún.'); return; }
-
-  historialChatIA.push({ rol: 'user', texto: pregunta });
-  renderChatIA();
-  input.value = '';
-
-  const btn = document.getElementById('ai-chat-btn');
-  btn.disabled = true; btn.style.opacity = '.5';
-  historialChatIA.push({ rol: 'ia', texto: '⚙️ Pensando...' });
-  renderChatIA();
-
-  // ✅ CORREGIDO: todo el bloque (armado de datos + fetch) ahora esta
-  // dentro del try/catch/finally. Antes, un error al armar los datos
-  // (antes del fetch) quedaba sin atrapar y dejaba el chat trabado en
-  // "Pensando..." para siempre, sin mostrar el error ni reactivar el boton.
-  try {
-    // Contexto: se limita a los ULTIMOS 5 DIAS (no todo el historico), para
-    // mantener el prompt liviano y controlar el costo/uso de la API de IA.
-    const LIMITE_DIAS_CHAT = 5;
-    const desde = new Date();
-    desde.setDate(desde.getDate() - LIMITE_DIAS_CHAT);
-    desde.setHours(0, 0, 0, 0);
-    let rowsDia = allRows.filter(r => r.irr >= 200 && r.dt && r.dt >= desde);
-    if (rowsDia.length > 1500) {
-      const pasoPre = Math.ceil(rowsDia.length / 1500);
-      rowsDia = rowsDia.filter((_, i) => i % pasoPre === 0);
-    }
-
-    let mesetasDia = colapsarMesetas(rowsDia);
-    if (mesetasDia.length > 150) {
-      const paso = Math.ceil(mesetasDia.length / 150);
-      mesetasDia = mesetasDia.filter((_, i) => i % paso === 0 || i === mesetasDia.length - 1);
-    }
-    const tablaDia = mesetasDia.map(g => {
-      const rango = g.n > 1 ? `${g.inicio}\u2192${g.fin} (${g.n} min)` : g.inicio;
-      const irrTxt = g.n > 1 ? `${(g.irrInicio||0).toFixed(0)}\u2192${(g.irrFin||0).toFixed(0)}` : (g.irrInicio||0).toFixed(0);
-      return `${rango} | irr:${irrTxt} W/m2 | potencia:${(g.potencia||0).toFixed(0)}W`;
-    }).join('\n');
-
-    const historialTexto = historialChatIA.slice(0, -2).slice(-6)
-      .map(m => (m.rol === 'user' ? 'Usuario: ' : 'IA: ') + m.texto).join('\n');
-
-    const promptChat = 'Eres un asistente de monitoreo fotovoltaico para la Estacion Solar UAC (Barranquilla, Colombia). '
-      + 'HECHOS: 9 microinversores Enphase IQ7+ instalados y operativos, potencia nominal 3258W (9x362W). '
-      + 'IMPORTANTE sobre los datos de abajo: la irradiancia se actualiza cada minuto (piranometro), pero la potencia de Enphase se actualiza cada 5-7 minutos -por eso veras el mismo valor de potencia repetido con un rango de minutos al lado; eso es UNA sola lectura de Enphase, no confirmacion de que estuvo fija ese tiempo-. '
-      + 'Solo lecturas con irradiancia >=200 W/m2 son validas para evaluar rendimiento (irr menor = amanecer/atardecer, no suciedad ni fallo). '
-      + (historialTexto ? '\nCONVERSACION PREVIA:\n' + historialTexto + '\n' : '')
-      + '\nDATOS DISPONIBLES (limitados a los ULTIMOS 5 DIAS; timestamp o rango, irradiancia, potencia; revisa las fechas/horas para ubicar el rango que pide el usuario. Si pregunta por algo anterior a estos 5 dias, dile que no tienes esos datos en esta consulta):\n' + (tablaDia || '(sin datos en la ventana de 5 dias)')
-      + '\n\nPREGUNTA DEL USUARIO: ' + pregunta
-      + '\n\nResponde en espanol, de forma directa y breve (maximo 4-5 oraciones salvo que la pregunta pida mas detalle), usando los datos de arriba. Si el usuario pide analizar un rango de horas especifico, ubica ese rango por los timestamps y limita tu respuesta a esos datos. Si no hay datos suficientes en el rango pedido, dilo claramente.';
-
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ accion: 'ia_diagnostico', prompt: promptChat }),
-    });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error);
-    historialChatIA[historialChatIA.length - 1] = { rol: 'ia', texto: data.texto || 'Sin respuesta.' };
-  } catch (e) {
-    historialChatIA[historialChatIA.length - 1] = { rol: 'ia', texto: '⛔ Error: ' + e.message };
-    console.error('enviarPreguntaIA:', e);
-  } finally {
-    renderChatIA();
-    btn.disabled = false; btn.style.opacity = '1';
-  }
 }
 
 // ════════════════════════════════════════════════════════════
