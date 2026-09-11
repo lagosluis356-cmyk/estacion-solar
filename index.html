@@ -890,47 +890,46 @@ async function enviarPreguntaIA() {
   historialChatIA.push({ rol: 'ia', texto: '⚙️ Pensando...' });
   renderChatIA();
 
-  // Contexto: se limita a los ULTIMOS 5 DIAS (no todo el historico), para
-  // mantener el prompt liviano y controlar el costo/uso de la API de IA.
-  // Si el usuario pregunta por algo mas antiguo, la IA debe decir que no
-  // tiene esos datos disponibles en esta consulta.
-  const LIMITE_DIAS_CHAT = 5;
-  const desde = new Date();
-  desde.setDate(desde.getDate() - LIMITE_DIAS_CHAT);
-  desde.setHours(0, 0, 0, 0);
-  let rowsDia = allRows.filter(r => r.irr >= 200 && r.dt && r.dt >= desde);
-  if (rowsDia.length > 1500) {
-    const pasoPre = Math.ceil(rowsDia.length / 1500);
-    rowsDia = rowsDia.filter((_, i) => i % pasoPre === 0);
-  }
-
-  let mesetasDia = colapsarMesetas(rowsDia);
-  // Si hay demasiados grupos, muestrear conservando inicio y fin
-  if (mesetasDia.length > 150) {
-    const paso = Math.ceil(mesetasDia.length / 150);
-    mesetasDia = mesetasDia.filter((_, i) => i % paso === 0 || i === mesetasDia.length - 1);
-  }
-  const tablaDia = mesetasDia.map(g => {
-    const rango = g.n > 1 ? `${g.inicio}\u2192${g.fin} (${g.n} min)` : g.inicio;
-    const irrTxt = g.n > 1 ? `${g.irrInicio.toFixed(0)}\u2192${g.irrFin.toFixed(0)}` : g.irrInicio.toFixed(0);
-    return `${rango} | irr:${irrTxt} W/m2 | potencia:${g.potencia.toFixed(0)}W`;
-  }).join('\n');
-
-  // Breve historial previo de la conversacion, para permitir preguntas de seguimiento
-  const historialTexto = historialChatIA.slice(0, -2).slice(-6)
-    .map(m => (m.rol === 'user' ? 'Usuario: ' : 'IA: ') + m.texto).join('\n');
-
-  const promptChat = 'Eres un asistente de monitoreo fotovoltaico para la Estacion Solar UAC (Barranquilla, Colombia). '
-    + 'HECHOS: 9 microinversores Enphase IQ7+ instalados y operativos, potencia nominal 3258W (9x362W). '
-    + 'IMPORTANTE sobre los datos de abajo: la irradiancia se actualiza cada minuto (piranometro), pero la potencia de Enphase se actualiza cada 5-7 minutos -por eso veras el mismo valor de potencia repetido con un rango de minutos al lado; eso es UNA sola lectura de Enphase, no confirmacion de que estuvo fija ese tiempo-. '
-    + 'Solo lecturas con irradiancia >=200 W/m2 son validas para evaluar rendimiento (irr menor = amanecer/atardecer, no suciedad ni fallo). '
-    + (historialTexto ? '\nCONVERSACION PREVIA:\n' + historialTexto + '\n' : '')
-    + '\nDATOS DISPONIBLES (limitados a los ULTIMOS 5 DIAS; timestamp o rango, irradiancia, potencia; revisa las fechas/horas para ubicar el rango que pide el usuario. Si pregunta por algo anterior a estos 5 dias, dile que no tienes esos datos en esta consulta):\n' + tablaDia
-    + '\n\nPREGUNTA DEL USUARIO: ' + pregunta
-    + '\n\nResponde en espanol, de forma directa y breve (maximo 4-5 oraciones salvo que la pregunta pida mas detalle), usando los datos de arriba. Si el usuario pide analizar un rango de horas especifico, ubica ese rango por los timestamps y limita tu respuesta a esos datos. Si no hay datos suficientes en el rango pedido, dilo claramente.';
-
+  // ✅ CORREGIDO: todo el bloque (armado de datos + fetch) ahora esta
+  // dentro del try/catch/finally. Antes, un error al armar los datos
+  // (antes del fetch) quedaba sin atrapar y dejaba el chat trabado en
+  // "Pensando..." para siempre, sin mostrar el error ni reactivar el boton.
   try {
-    // ✅ CORREGIDO: POST en vez de GET, mismo motivo que en ejecutarDiagnostico().
+    // Contexto: se limita a los ULTIMOS 5 DIAS (no todo el historico), para
+    // mantener el prompt liviano y controlar el costo/uso de la API de IA.
+    const LIMITE_DIAS_CHAT = 5;
+    const desde = new Date();
+    desde.setDate(desde.getDate() - LIMITE_DIAS_CHAT);
+    desde.setHours(0, 0, 0, 0);
+    let rowsDia = allRows.filter(r => r.irr >= 200 && r.dt && r.dt >= desde);
+    if (rowsDia.length > 1500) {
+      const pasoPre = Math.ceil(rowsDia.length / 1500);
+      rowsDia = rowsDia.filter((_, i) => i % pasoPre === 0);
+    }
+
+    let mesetasDia = colapsarMesetas(rowsDia);
+    if (mesetasDia.length > 150) {
+      const paso = Math.ceil(mesetasDia.length / 150);
+      mesetasDia = mesetasDia.filter((_, i) => i % paso === 0 || i === mesetasDia.length - 1);
+    }
+    const tablaDia = mesetasDia.map(g => {
+      const rango = g.n > 1 ? `${g.inicio}\u2192${g.fin} (${g.n} min)` : g.inicio;
+      const irrTxt = g.n > 1 ? `${(g.irrInicio||0).toFixed(0)}\u2192${(g.irrFin||0).toFixed(0)}` : (g.irrInicio||0).toFixed(0);
+      return `${rango} | irr:${irrTxt} W/m2 | potencia:${(g.potencia||0).toFixed(0)}W`;
+    }).join('\n');
+
+    const historialTexto = historialChatIA.slice(0, -2).slice(-6)
+      .map(m => (m.rol === 'user' ? 'Usuario: ' : 'IA: ') + m.texto).join('\n');
+
+    const promptChat = 'Eres un asistente de monitoreo fotovoltaico para la Estacion Solar UAC (Barranquilla, Colombia). '
+      + 'HECHOS: 9 microinversores Enphase IQ7+ instalados y operativos, potencia nominal 3258W (9x362W). '
+      + 'IMPORTANTE sobre los datos de abajo: la irradiancia se actualiza cada minuto (piranometro), pero la potencia de Enphase se actualiza cada 5-7 minutos -por eso veras el mismo valor de potencia repetido con un rango de minutos al lado; eso es UNA sola lectura de Enphase, no confirmacion de que estuvo fija ese tiempo-. '
+      + 'Solo lecturas con irradiancia >=200 W/m2 son validas para evaluar rendimiento (irr menor = amanecer/atardecer, no suciedad ni fallo). '
+      + (historialTexto ? '\nCONVERSACION PREVIA:\n' + historialTexto + '\n' : '')
+      + '\nDATOS DISPONIBLES (limitados a los ULTIMOS 5 DIAS; timestamp o rango, irradiancia, potencia; revisa las fechas/horas para ubicar el rango que pide el usuario. Si pregunta por algo anterior a estos 5 dias, dile que no tienes esos datos en esta consulta):\n' + (tablaDia || '(sin datos en la ventana de 5 dias)')
+      + '\n\nPREGUNTA DEL USUARIO: ' + pregunta
+      + '\n\nResponde en espanol, de forma directa y breve (maximo 4-5 oraciones salvo que la pregunta pida mas detalle), usando los datos de arriba. Si el usuario pide analizar un rango de horas especifico, ubica ese rango por los timestamps y limita tu respuesta a esos datos. Si no hay datos suficientes en el rango pedido, dilo claramente.';
+
     const resp = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -942,6 +941,7 @@ async function enviarPreguntaIA() {
     historialChatIA[historialChatIA.length - 1] = { rol: 'ia', texto: data.texto || 'Sin respuesta.' };
   } catch (e) {
     historialChatIA[historialChatIA.length - 1] = { rol: 'ia', texto: '⛔ Error: ' + e.message };
+    console.error('enviarPreguntaIA:', e);
   } finally {
     renderChatIA();
     btn.disabled = false; btn.style.opacity = '1';
