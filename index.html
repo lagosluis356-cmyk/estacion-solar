@@ -770,8 +770,15 @@ async function ejecutarDiagnostico() {
     + '[1-3 acciones concretas segun el estado]';
 
   try {
-    const params = new URLSearchParams({ accion: 'ia_diagnostico', prompt: promptTexto });
-    const respProxy = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+    // ✅ CORREGIDO: se usa POST en vez de GET. Un prompt largo (varios dias
+    // de datos) puede exceder el limite de longitud de una URL y dejar la
+    // peticion colgada sin error visible. POST manda el texto en el cuerpo
+    // de la peticion, sin ese limite practico.
+    const respProxy = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita pre-flight CORS de Apps Script
+      body: JSON.stringify({ accion: 'ia_diagnostico', prompt: promptTexto }),
+    });
     if (!respProxy.ok) throw new Error('HTTP ' + respProxy.status + ' del proxy Apps Script');
     const dataProxy = await respProxy.json();
     if (dataProxy.error) throw new Error(dataProxy.error);
@@ -923,8 +930,12 @@ async function enviarPreguntaIA() {
     + '\n\nResponde en espanol, de forma directa y breve (maximo 4-5 oraciones salvo que la pregunta pida mas detalle), usando los datos de arriba. Si el usuario pide analizar un rango de horas especifico, ubica ese rango por los timestamps y limita tu respuesta a esos datos. Si no hay datos suficientes en el rango pedido, dilo claramente.';
 
   try {
-    const params = new URLSearchParams({ accion: 'ia_diagnostico', prompt: promptChat });
-    const resp = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+    // ✅ CORREGIDO: POST en vez de GET, mismo motivo que en ejecutarDiagnostico().
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ accion: 'ia_diagnostico', prompt: promptChat }),
+    });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     if (data.error) throw new Error(data.error);
