@@ -347,6 +347,21 @@
         <span style="font-size:1.4rem">⛔</span>
         <div id="ai-error-msg">Error al conectar con el modelo IA.</div>
       </div>
+
+      <!-- ✅ NUEVO: mini-chat para preguntas libres a la IA -->
+      <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1rem">
+        <div style="font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem">Preguntar algo específico</div>
+        <div id="ai-chat-historial" style="display:flex;flex-direction:column;gap:8px;margin-bottom:.75rem;max-height:320px;overflow-y:auto"></div>
+        <div style="display:flex;gap:8px">
+          <input id="ai-chat-input" type="text" placeholder='Ej: "analiza de 6am a 2pm" o "¿qué pasó ayer?" (datos disponibles: últimos 5 días)'
+            style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.78rem;font-family:'DM Sans',sans-serif"
+            onkeydown="if(event.key==='Enter') enviarPreguntaIA()">
+          <button id="ai-chat-btn" onclick="enviarPreguntaIA()"
+            style="background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(139,92,246,.2));border:1px solid rgba(99,102,241,.4);color:#a5b4fc;border-radius:8px;padding:8px 16px;font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap">
+            Preguntar
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -677,8 +692,34 @@ async function ejecutarDiagnostico() {
 
   const hora  = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   const fecha = new Date().toLocaleDateString('es-CO');
-  const muestraRows = m.rows.filter((_,i)=>i%5===0).slice(-12);
-  const tablaCSV = muestraRows.map(r=>[r.ts, r.irr.toFixed(1), r.potencia.toFixed(0), r.tDS!==null?r.tDS.toFixed(1):'NA', r.tDHT!==null?r.tDHT.toFixed(1):'NA', r.hum.toFixed(1)].join(',')).join('\n');
+  // ════════════════════════════════════════════════════════════
+  // ✅ CORREGIDO: en vez de una muestra dispersa (cada 5 filas), se
+  // colapsan los tramos donde la potencia de Enphase quedo "congelada"
+  // (mismo valor exacto repetido varias filas seguidas, porque Enphase
+  // actualiza mas lento que la irradiancia del piranometro). Esto le
+  // muestra a la IA la estructura real de la serie -incluidos los
+  // escalones- en vez de dos puntos lejanos que parecen un salto abrupto.
+  // ════════════════════════════════════════════════════════════
+  function colapsarMesetas(rows) {
+    const grupos = [];
+    for (const r of rows) {
+      const ultimo = grupos[grupos.length - 1];
+      if (ultimo && ultimo.potencia === r.potencia) {
+        ultimo.fin = r.ts;
+        ultimo.irrFin = r.irr;
+        ultimo.n++;
+      } else {
+        grupos.push({ inicio: r.ts, fin: r.ts, irrInicio: r.irr, irrFin: r.irr, potencia: r.potencia, n: 1 });
+      }
+    }
+    return grupos;
+  }
+  const mesetas = colapsarMesetas(m.rows.slice(-40)); // ultimos ~40 min sin decimar
+  const tablaCSV = mesetas.map(g => {
+    const rango = g.n > 1 ? `${g.inicio}\u2192${g.fin} (${g.n} min, mismo valor Enphase)` : g.inicio;
+    const irrTxt = g.n > 1 ? `${g.irrInicio.toFixed(0)}\u2192${g.irrFin.toFixed(0)}` : g.irrInicio.toFixed(0);
+    return `${rango} | irr:${irrTxt} W/m2 | potencia:${g.potencia.toFixed(0)}W`;
+  }).join('\n');
   const prAvgStr = m.avgPR !== null ? m.avgPR.toFixed(3) : 'N/D';
 
   // ════════════════════════════════════════════════════════════
@@ -708,6 +749,7 @@ async function ejecutarDiagnostico() {
     + '- PR entre 0.60 y 0.74 sostenido con irradiancia plena = posible suciedad o degradacion leve; sugierelo como hipotesis, no como certeza.\n'
     + '- PR < 0.60 con irradiancia plena, o potencia cercana a 0 con irradiancia alta = posible fallo de hardware (microinversor caido, cableado, etc.); distinguelo de la suciedad porque la caida suele ser abrupta y no gradual.\n'
     + '- Una caida GRADUAL y sostenida en varios dias sugiere suciedad progresiva. Una caida ABRUPTA y puntual sugiere falla de hardware. Usa la tendencia de potencia (abajo) como referencia temporal.\n'
+    + '- IMPORTANTE sobre la muestra de abajo: la irradiancia (piranometro) se actualiza cada minuto, pero la potencia (Enphase) se actualiza cada 5-7 minutos. Por eso vas a ver el MISMO valor de potencia repetido en varias filas seguidas -eso es UNA sola lectura de Enphase que se mantuvo en pantalla varios minutos, no una confirmacion de que la potencia estuvo realmente fija-. Para juzgar si una caida es abrupta, compara SOLO entre valores de potencia DISTINTOS (no cuentes las repeticiones), y evalua si esos valores distintos bajan de forma escalonada junto con la irradiancia (=gradual, probable nube o atardecer) o si hay un salto grande entre dos valores distintos consecutivos sin que la irradiancia haya cambiado proporcionalmente (=posible falla real).\n'
     + '- Debes decidir tu mismo, con los numeros de arriba, si el patron observado se parece mas a suciedad, a fallo, a condicion climatica, o a operacion normal. No repitas la nota de contexto como si fuera tu conclusion.\n'
     + '\n'
     + '- SOI puntual ultima lectura: ' + m.soiUlt.toFixed(1) + '%\n'
@@ -716,7 +758,7 @@ async function ejecutarDiagnostico() {
     + '- Humedad relativa promedio: ' + m.avgHum.toFixed(1) + '%\n'
     + '- Tendencia potencia: ' + m.tendencia + ' (' + m.tendenciaPct.toFixed(1) + '%)\n'
     + '- Fecha/hora analisis: ' + fecha + ' ' + hora + '\n\n'
-    + 'MUESTRA LECTURAS (timestamp,irr,potencia,T.panel,T.ambiente,humedad):\n'
+    + 'SERIE RECIENTE (mesetas colapsadas; un rango "min\u2192min (N min, mismo valor Enphase)" significa que Enphase no refresco durante ese tramo, NO que la potencia real estuvo fija N minutos):\n'
     + tablaCSV + '\n\n'
     + 'Responde en espanol con este formato EXACTO:\n\n'
     + 'ESTADO: [NORMAL | ALERTA_LEVE | ALERTA_CRITICA | FALLO]\n'
@@ -749,6 +791,7 @@ async function ejecutarDiagnostico() {
 
     mostrarResultadoIA(estado, causa, confianza, diagnostico, recomendacion);
     document.getElementById('ai-hora').textContent = 'Análisis: ' + hora;
+    enviarDiagnosticoPorCorreo(estado, causa, confianza, diagnostico, recomendacion, hora, fecha);
 
   } catch(e) {
     clearInterval(mi_int);
@@ -803,6 +846,95 @@ function mostrarErrorIA(msg) {
   document.getElementById('ai-idle').style.display    = 'none';
   document.getElementById('ai-error').style.display   = 'flex';
   document.getElementById('ai-error-msg').textContent = msg;
+}
+
+// ════════════════════════════════════════════════════════════
+// ✅ NUEVO: mini-chat de preguntas libres sobre los datos del sistema.
+// El usuario escribe en lenguaje natural (ej. "analiza de 6am a 2pm");
+// NO se hace un parser de fechas propio -se le pasan a la IA los datos
+// del dia completo con sus timestamps reales, y ella misma identifica
+// el rango que el usuario pidio, igual que lo harias tu leyendo la tabla.
+// ════════════════════════════════════════════════════════════
+let historialChatIA = []; // {rol:'user'|'ia', texto:string}
+
+function renderChatIA() {
+  const cont = document.getElementById('ai-chat-historial');
+  cont.innerHTML = historialChatIA.map(m => {
+    if (m.rol === 'user') {
+      return `<div style="align-self:flex-end;max-width:85%;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:10px 10px 2px 10px;padding:.6rem .9rem;font-size:.78rem;color:#e0e7ff">${m.texto}</div>`;
+    }
+    return `<div style="align-self:flex-start;max-width:90%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px 10px 10px 2px;padding:.6rem .9rem;font-size:.78rem;color:#cbd5e1;white-space:pre-wrap">${m.texto}</div>`;
+  }).join('');
+  cont.scrollTop = cont.scrollHeight;
+}
+
+async function enviarPreguntaIA() {
+  const input = document.getElementById('ai-chat-input');
+  const pregunta = input.value.trim();
+  if (!pregunta) return;
+  if (!allRows.length) { alert('No hay datos cargados aún.'); return; }
+
+  historialChatIA.push({ rol: 'user', texto: pregunta });
+  renderChatIA();
+  input.value = '';
+
+  const btn = document.getElementById('ai-chat-btn');
+  btn.disabled = true; btn.style.opacity = '.5';
+  historialChatIA.push({ rol: 'ia', texto: '⚙️ Pensando...' });
+  renderChatIA();
+
+  // Contexto: se limita a los ULTIMOS 5 DIAS (no todo el historico), para
+  // mantener el prompt liviano y controlar el costo/uso de la API de IA.
+  // Si el usuario pregunta por algo mas antiguo, la IA debe decir que no
+  // tiene esos datos disponibles en esta consulta.
+  const LIMITE_DIAS_CHAT = 5;
+  const desde = new Date();
+  desde.setDate(desde.getDate() - LIMITE_DIAS_CHAT);
+  desde.setHours(0, 0, 0, 0);
+  let rowsDia = allRows.filter(r => r.irr >= 200 && r.dt && r.dt >= desde);
+  if (rowsDia.length > 1500) {
+    const pasoPre = Math.ceil(rowsDia.length / 1500);
+    rowsDia = rowsDia.filter((_, i) => i % pasoPre === 0);
+  }
+
+  let mesetasDia = colapsarMesetas(rowsDia);
+  // Si hay demasiados grupos, muestrear conservando inicio y fin
+  if (mesetasDia.length > 150) {
+    const paso = Math.ceil(mesetasDia.length / 150);
+    mesetasDia = mesetasDia.filter((_, i) => i % paso === 0 || i === mesetasDia.length - 1);
+  }
+  const tablaDia = mesetasDia.map(g => {
+    const rango = g.n > 1 ? `${g.inicio}\u2192${g.fin} (${g.n} min)` : g.inicio;
+    const irrTxt = g.n > 1 ? `${g.irrInicio.toFixed(0)}\u2192${g.irrFin.toFixed(0)}` : g.irrInicio.toFixed(0);
+    return `${rango} | irr:${irrTxt} W/m2 | potencia:${g.potencia.toFixed(0)}W`;
+  }).join('\n');
+
+  // Breve historial previo de la conversacion, para permitir preguntas de seguimiento
+  const historialTexto = historialChatIA.slice(0, -2).slice(-6)
+    .map(m => (m.rol === 'user' ? 'Usuario: ' : 'IA: ') + m.texto).join('\n');
+
+  const promptChat = 'Eres un asistente de monitoreo fotovoltaico para la Estacion Solar UAC (Barranquilla, Colombia). '
+    + 'HECHOS: 9 microinversores Enphase IQ7+ instalados y operativos, potencia nominal 3258W (9x362W). '
+    + 'IMPORTANTE sobre los datos de abajo: la irradiancia se actualiza cada minuto (piranometro), pero la potencia de Enphase se actualiza cada 5-7 minutos -por eso veras el mismo valor de potencia repetido con un rango de minutos al lado; eso es UNA sola lectura de Enphase, no confirmacion de que estuvo fija ese tiempo-. '
+    + 'Solo lecturas con irradiancia >=200 W/m2 son validas para evaluar rendimiento (irr menor = amanecer/atardecer, no suciedad ni fallo). '
+    + (historialTexto ? '\nCONVERSACION PREVIA:\n' + historialTexto + '\n' : '')
+    + '\nDATOS DISPONIBLES (limitados a los ULTIMOS 5 DIAS; timestamp o rango, irradiancia, potencia; revisa las fechas/horas para ubicar el rango que pide el usuario. Si pregunta por algo anterior a estos 5 dias, dile que no tienes esos datos en esta consulta):\n' + tablaDia
+    + '\n\nPREGUNTA DEL USUARIO: ' + pregunta
+    + '\n\nResponde en espanol, de forma directa y breve (maximo 4-5 oraciones salvo que la pregunta pida mas detalle), usando los datos de arriba. Si el usuario pide analizar un rango de horas especifico, ubica ese rango por los timestamps y limita tu respuesta a esos datos. Si no hay datos suficientes en el rango pedido, dilo claramente.';
+
+  try {
+    const params = new URLSearchParams({ accion: 'ia_diagnostico', prompt: promptChat });
+    const resp = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    historialChatIA[historialChatIA.length - 1] = { rol: 'ia', texto: data.texto || 'Sin respuesta.' };
+  } catch (e) {
+    historialChatIA[historialChatIA.length - 1] = { rol: 'ia', texto: '⛔ Error: ' + e.message };
+  } finally {
+    renderChatIA();
+    btn.disabled = false; btn.style.opacity = '1';
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1101,6 +1233,22 @@ async function enviarAlertaCorreo(id, titulo, desc) {
   try {
     await fetch(`${APPS_SCRIPT_URL}?${new URLSearchParams({accion:'alerta',alerta_id:id,alerta_titulo:titulo,alerta_desc:desc,timestamp:new Date().toLocaleString('es-CO')})}`);
   } catch(e) { console.warn('Error alerta:', e.message); }
+}
+
+// ✅ NUEVO: envia por correo cada diagnostico generado con "Analizar ahora".
+// Reutiliza la accion 'alerta' que ya existe en Apps Script (mismo mecanismo
+// de correo), pasando el diagnostico completo en el campo alerta_desc.
+async function enviarDiagnosticoPorCorreo(estado, causa, confianza, diagnostico, recomendacion, hora, fecha) {
+  try {
+    const cuerpo = `Estado: ${estado}\nCausa: ${causa}\nConfianza: ${confianza}\n\n${diagnostico}\n\nRecomendacion:\n${recomendacion}`;
+    await fetch(`${APPS_SCRIPT_URL}?${new URLSearchParams({
+      accion: 'alerta',
+      alerta_id: 'diagnostico-manual-' + Date.now(),
+      alerta_titulo: `Diagnostico IA (${estado}) - ${fecha} ${hora}`,
+      alerta_desc: cuerpo,
+      timestamp: new Date().toLocaleString('es-CO'),
+    })}`);
+  } catch (e) { console.warn('Error enviando diagnostico por correo:', e.message); }
 }
 
 // ════════════════════════════════════════════════════════════
