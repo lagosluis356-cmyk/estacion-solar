@@ -1,0 +1,355 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include <ModbusMaster.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <DHT.h>
+#include <ArduinoJson.h>
+
+#define DHTTYPE DHT22
+
+// ── WiFi ────────────────────────────────────────────────────
+const char* ssid     = "UAC_SOLAR_STATION";
+const char* password = "estacion*solar";
+
+// ── Google Apps Script ──────────────────────────────────────
+ const char* scriptURL = "https://script.google.com/macros/s/AKfycbxlWR94O-s-bV7sXEZdkNoHVcPaomBCqTXmHB5Y6N8nvfy1PVz6CEwfj-O4LYwJlyX7ZA/exec";
+
+// ── Envoy local ─────────────────────────────────────────────
+const char* ENVOY_IP    = "192.168.1.218";
+const char* ENVOY_TOKEN = "eyJraWQiOiI3ZDEwMDA1ZC03ODk5LTRkMGQtYmNiNC0yNDRmOThlZTE1NmIiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiIxMjE5MzkwMDIyMjEiLCJpc3MiOiJFbnRyZXoiLCJlbnBoYXNlVXNlciI6Im93bmVyIiwiZXhwIjoxODEzNDEzNzEzLCJpYXQiOjE3ODE4Nzc3MTMsImp0aSI6IjljZThjMDYyLTJiNTYtNDU3ZC1hZGFkLTE4ZjhiZjZlYzVmYyIsInVzZXJuYW1lIjoibHVpcy5sYWdvczFAdWFjLmVkdS5jbyJ9.q_SwUH4NoUoOSCRNgaHgqcg9DrxWx2f40TQesuID8wlHkFm1MvMlBM1Bd5ovq9bvSTpEKMjCCbA4lXWzxiwczA";
+
+// ── Piranómetro RS-485 Modbus ────────────────────────────────
+// RO -> GPIO17 | DI -> GPIO5 | RE/DE -> GPIO16
+HardwareSerial RS485Serial(2);
+const int MAX485_RE_DE = 16;
+ModbusMaster node;
+
+// ── Sensores ─────────────────────────────────────────────────
+// DS18B20 -> GPIO21 | DHT22 -> GPIO18
+#define ONE_WIRE_BUS 21
+#define DHTPIN       18
+
+OneWire ourWire1(ONE_WIRE_BUS);
+DallasTemperature sensors1(&ourWire1);
+DHT dht(DHTPIN, DHTTYPE, 22);
+
+// ── Servidor web local ───────────────────────────────────────
+WebServer server(80);
+
+// ── Variables globales — sensores meteorológicos ─────────────
+float gIrradiance = NAN;
+float gTempDS     = NAN;
+float gTempDHT    = NAN;
+float gHumDHT     = NAN;
+
+// ── Variables globales — Envoy ───────────────────────────────
+float gPotencia    = 0.0;
+float gCorriente   = 0.0;
+float gVoltaje     = 0.0;
+float gEnergiaDia  = 0.0;
+float gEnergiaTotal= 0.0;
+int   gActivos     = 0;
+
+// ── Temporizadores ───────────────────────────────────────────
+unsigned long lastSensorRead  = 0;
+unsigned long lastSendToSheet = 0;
+unsigned long lastEnvoyRead   = 0;
+
+const unsigned long sensorInterval = 3000;   // cada 3 s
+const unsigned long sendInterval   = 60000;  // cada 60 s
+const unsigned long envoyInterval  = 60000;  // cada 60 s
+
+// ── HTML página local ────────────────────────────────────────
+const char index_html[] PROGMEM = R"HTML(
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Estación Solar ESP32</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#0f172a; color:#e5e7eb; margin:0; padding:0; }
+  header { text-align:center; padding:16px; background:#111827; border-bottom:1px solid #1f2933; }
+  h1 { margin:0; font-size:1.5rem; }
+  main { max-width:900px; margin:16px auto 40px auto; padding:0 16px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; }
+  .card { background:#111827; border-radius:12px; padding:16px; border:1px solid #1f2937; }
+  .card h2 { margin:0 0 8px 0; font-size:0.9rem; color:#9ca3af; text-transform:uppercase; letter-spacing:0.06em; }
+  .value { font-size:1.8rem; font-weight:600; }
+  .unit { font-size:0.9rem; color:#9ca3af; margin-left:4px; }
+  .section { margin-top:20px; font-size:0.75rem; color:#9ca3af; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; }
+  .status-bar { margin-top:16px; font-size:0.85rem; color:#9ca3af; display:flex; justify-content:space-between; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:#22c55e; }
+</style>
+</head>
+<body>
+<header><h1>Estación Solar ESP32 — UAC</h1></header>
+<main>
+  <div class="section">Variables meteorológicas</div>
+  <div class="grid">
+    <div class="card"><h2>Irradiancia</h2><div class="value"><span id="irr">--</span><span class="unit">W/m²</span></div></div>
+    <div class="card"><h2>Temp. panel</h2><div class="value"><span id="tempDS">--</span><span class="unit">°C</span></div></div>
+    <div class="card"><h2>Temp. ambiente</h2><div class="value"><span id="tempDHT">--</span><span class="unit">°C</span></div></div>
+    <div class="card"><h2>Humedad</h2><div class="value"><span id="hum">--</span><span class="unit">%</span></div></div>
+  </div>
+  <div class="section">Producción eléctrica — Enphase IQ7+</div>
+  <div class="grid">
+    <div class="card"><h2>Potencia</h2><div class="value"><span id="pot">--</span><span class="unit">W</span></div></div>
+    <div class="card"><h2>Corriente AC</h2><div class="value"><span id="cor">--</span><span class="unit">A</span></div></div>
+    <div class="card"><h2>Voltaje AC</h2><div class="value"><span id="vol">--</span><span class="unit">V</span></div></div>
+    <div class="card"><h2>Energía hoy</h2><div class="value"><span id="ene">--</span><span class="unit">kWh</span></div></div>
+  </div>
+  <div class="status-bar">
+    <div><span class="dot"></span><span id="statusText">Conectando...</span></div>
+    <div>Actualización cada 3 s</div>
+  </div>
+</main>
+<script>
+async function fetchData() {
+  try {
+    const res  = await fetch('/data');
+    const data = await res.json();
+    document.getElementById('irr').textContent    = Number(data.irradiance).toFixed(2);
+    document.getElementById('tempDS').textContent = Number(data.tempDS).toFixed(2);
+    document.getElementById('tempDHT').textContent= Number(data.tempDHT).toFixed(2);
+    document.getElementById('hum').textContent    = Number(data.humidity).toFixed(2);
+    document.getElementById('pot').textContent    = Number(data.potencia).toFixed(1);
+    document.getElementById('cor').textContent    = Number(data.corriente).toFixed(3);
+    document.getElementById('vol').textContent    = Number(data.voltaje).toFixed(1);
+    document.getElementById('ene').textContent    = Number(data.energiaHoy).toFixed(3);
+    document.getElementById('statusText').textContent = 'Última actualización: ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('statusText').textContent = 'Error: ' + e.message;
+  }
+}
+setInterval(fetchData, 3000);
+fetchData();
+</script>
+</body>
+</html>
+)HTML";
+
+// ════════════════════════════════════════════════════════════
+//  CALLBACKS RS-485
+// ════════════════════════════════════════════════════════════
+void preTransmission()  { digitalWrite(MAX485_RE_DE, HIGH); }
+void postTransmission() { digitalWrite(MAX485_RE_DE, LOW);  }
+
+// ════════════════════════════════════════════════════════════
+//  LECTURA SENSORES METEOROLÓGICOS
+// ════════════════════════════════════════════════════════════
+void readSensors() {
+  uint8_t result = node.readHoldingRegisters(21, 2);
+  if (result == node.ku8MBSuccess) {
+    uint16_t lowWord  = node.getResponseBuffer(0);
+    uint16_t highWord = node.getResponseBuffer(1);
+    uint32_t raw = ((uint32_t)highWord << 16) | lowWord;
+    memcpy(&gIrradiance, &raw, sizeof(gIrradiance));
+    if (gIrradiance < 0) gIrradiance = 0;
+  } else {
+    gIrradiance = NAN;
+  }
+
+  sensors1.requestTemperatures();
+  gTempDS  = sensors1.getTempCByIndex(0);
+  gHumDHT  = dht.readHumidity();
+  gTempDHT = dht.readTemperature();
+
+  Serial.println("----------------------------------------");
+  Serial.printf("Irradiancia: %.2f W/m²\n", isnan(gIrradiance) ? 0 : gIrradiance);
+  Serial.printf("T. Panel:    %.2f °C\n",   isnan(gTempDS)     ? 0 : gTempDS);
+  Serial.printf("T. Ambiente: %.2f °C\n",   isnan(gTempDHT)    ? 0 : gTempDHT);
+  Serial.printf("Humedad:     %.2f %%\n",   isnan(gHumDHT)     ? 0 : gHumDHT);
+}
+
+// ════════════════════════════════════════════════════════════
+//  LECTURA ENVOY LOCAL
+// ════════════════════════════════════════════════════════════
+void readEnvoy() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(8);
+
+  HTTPClient https;
+  String url = "https://" + String(ENVOY_IP) + "/production.json";
+  https.begin(client, url);
+  https.addHeader("Authorization", String("Bearer ") + ENVOY_TOKEN);
+  https.setTimeout(8000);
+
+  int httpCode = https.GET();
+  if (httpCode == 200) {
+    String payload = https.getString();
+    DynamicJsonDocument doc(4096);
+    if (!deserializeJson(doc, payload)) {
+      JsonArray production = doc["production"];
+      for (JsonObject item : production) {
+        String type = item["type"].as<String>();
+       if (type == "inverters") {
+  gPotencia     = item["wNow"].as<float>();
+  gEnergiaTotal = item["whLifetime"].as<float>() / 1000000.0;
+  gActivos      = item["activeCount"].as<int>();
+  gEnergiaDia   = item["wattHoursToday"].as<float>() / 1000.0;
+}
+        if (type == "eim") {
+          gCorriente  = item["rmsCurrent"].as<float>();
+          gVoltaje    = item["rmsVoltage"].as<float>();
+          gEnergiaDia = item["whToday"].as<float>() / 1000.0;
+        }
+      }
+      Serial.println("--- Envoy ---");
+      Serial.printf("Potencia:  %.1f W | Corriente: %.3f A | Voltaje: %.1f V\n",
+                    gPotencia, gCorriente, gVoltaje);
+      Serial.printf("Energía hoy: %.3f kWh | Activos: %d\n", gEnergiaDia, gActivos);
+    }
+  } else {
+    Serial.printf("Error Envoy HTTP: %d\n", httpCode);
+  }
+  https.end();
+}
+
+// ════════════════════════════════════════════════════════════
+//  ENVIAR A GOOGLE SHEETS
+// ════════════════════════════════════════════════════════════
+void sendToGoogleSheets() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Sin WiFi — datos no enviados");
+    return;
+  }
+
+  float irr  = isnan(gIrradiance) ? 0.0f : gIrradiance;
+  float tDS  = isnan(gTempDS)     ? 0.0f : gTempDS;
+  float tDHT = isnan(gTempDHT)    ? 0.0f : gTempDHT;
+  float hDHT = isnan(gHumDHT)     ? 0.0f : gHumDHT;
+
+  String url = String(scriptURL);
+  url += "?device_id=esp32_01";
+  url += "&irradiancia="          + String(irr,  2);
+  url += "&temperatura_panel="    + String(tDS,  2);
+  url += "&temperatura_ambiente=" + String(tDHT, 2);
+  url += "&humedad="              + String(hDHT, 2);
+  url += "&potencia="             + String(gPotencia,  1);
+  url += "&energia="              + String(gEnergiaDia,3);
+  url += "&corriente="            + String(gCorriente, 3);
+  url += "&voltaje="              + String(gVoltaje,   1);
+
+  Serial.println("URL: " + url);
+  Serial.println("Enviando a Google Sheets...");
+
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  HTTPClient https;
+  https.begin(client, url);
+  https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  https.setTimeout(10000);
+
+  int httpCode = https.GET();
+  Serial.printf("HTTP: %d — %s\n", httpCode, https.getString().c_str());
+  https.end();
+}
+
+// ════════════════════════════════════════════════════════════
+//  HANDLERS WEB LOCAL
+// ════════════════════════════════════════════════════════════
+void handleRoot() {
+  server.send_P(200, "text/html", index_html);
+}
+
+void handleData() {
+  float irr  = isnan(gIrradiance) ? 0.0f : gIrradiance;
+  float tDS  = isnan(gTempDS)     ? 0.0f : gTempDS;
+  float tDHT = isnan(gTempDHT)    ? 0.0f : gTempDHT;
+  float hDHT = isnan(gHumDHT)     ? 0.0f : gHumDHT;
+
+  String json = "{";
+  json += "\"irradiance\":"  + String(irr,  2) + ",";
+  json += "\"tempDS\":"      + String(tDS,  2) + ",";
+  json += "\"tempDHT\":"     + String(tDHT, 2) + ",";
+  json += "\"humidity\":"    + String(hDHT, 2) + ",";
+  json += "\"potencia\":"    + String(gPotencia,   1) + ",";
+  json += "\"corriente\":"   + String(gCorriente,  3) + ",";
+  json += "\"voltaje\":"     + String(gVoltaje,    1) + ",";
+  json += "\"energiaHoy\":"  + String(gEnergiaDia, 3) + ",";
+  json += "\"activos\":"     + String(gActivos);
+  json += "}";
+
+  server.send(200, "application/json", json);
+}
+
+// ════════════════════════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════════════════════════
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("Iniciando Estacion Solar UAC...");
+
+  // RS-485 Modbus
+  RS485Serial.begin(9600, SERIAL_8N2, 17, 5);
+  pinMode(MAX485_RE_DE, OUTPUT);
+  digitalWrite(MAX485_RE_DE, LOW);
+  node.begin(1, RS485Serial);
+  node.preTransmission(preTransmission);
+  node.postTransmission(postTransmission);
+
+  // Sensores
+  sensors1.begin();
+  dht.begin();
+
+  // Primera lectura
+  readSensors();
+
+  // WiFi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando a WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.print("Conectado. IP: ");
+  Serial.println(WiFi.localIP());
+
+  // Primera lectura Envoy — ANTES del envío a Sheets
+  Serial.println("Leyendo Envoy...");
+  readEnvoy();
+  delay(2000); // esperar 2s para asegurar que los datos estén listos
+
+  // Primer envío a Sheets con datos del Envoy incluidos
+  sendToGoogleSheets();
+
+  // Servidor web
+  server.on("/",     HTTP_GET, handleRoot);
+  server.on("/data", HTTP_GET, handleData);
+  server.begin();
+  Serial.println("Servidor HTTP iniciado");
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOOP
+// ════════════════════════════════════════════════════════════
+void loop() {
+  server.handleClient();
+
+  unsigned long now = millis();
+
+  if (now - lastSensorRead >= sensorInterval) {
+    lastSensorRead = now;
+    readSensors();
+  }
+
+  if (now - lastEnvoyRead >= envoyInterval) {
+    lastEnvoyRead = now;
+    readEnvoy();
+  }
+
+  if (now - lastSendToSheet >= sendInterval) {
+    lastSendToSheet = now;
+    sendToGoogleSheets();
+  }
+}
